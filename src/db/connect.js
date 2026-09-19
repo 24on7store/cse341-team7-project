@@ -25,6 +25,22 @@ const connectToDb = async (options = {}) => {
   return database;
 };
 
+const connectMongoose = async (options = {}) => {
+  if (mongoose.connection.readyState === 1) {
+    return mongoose.connection;
+  }
+
+  const connectionString = options.connectionString || process.env.MONGODB_URI;
+  const databaseName = options.databaseName || process.env.MONGODB_DB_NAME || 'practice';
+
+  if (!connectionString) {
+    throw new Error('MONGODB_URI is required.');
+  }
+
+  await mongoose.connect(connectionString, { dbName: databaseName });
+  return mongoose.connection;
+};
+
 const getDb = () => {
   if (!database) {
     throw new Error('Database not initialized. Call connectToDb first.');
@@ -41,13 +57,4 @@ const closeDb = async () => {
   await mongoose.disconnect();
 };
 
-const connectMongoose = async (options = {}) => {
-  const connectionString = options.connectionString || process.env.MONGODB_URI;
-  if (!connectionString) {
-    throw new Error('MONGODB_URI is required.');
-  }
-  await mongoose.connect(connectionString);
-};
-
 export { closeDb, connectToDb, connectMongoose, getDb };
-
