@@ -1,4 +1,5 @@
 import { MongoClient } from 'mongodb';
+import mongoose from 'mongoose';
 import dns from 'dns';
 
 dns.setServers(['8.8.8.8', '8.8.4.4']);
@@ -37,6 +38,16 @@ const closeDb = async () => {
     client = undefined;
     database = undefined;
   }
+  await mongoose.disconnect();
 };
 
-export { closeDb, connectToDb, getDb };
+const connectMongoose = async (options = {}) => {
+  const connectionString = options.connectionString || process.env.MONGODB_URI;
+  if (!connectionString) {
+    throw new Error('MONGODB_URI is required.');
+  }
+  await mongoose.connect(connectionString);
+};
+
+export { closeDb, connectToDb, connectMongoose, getDb };
+
