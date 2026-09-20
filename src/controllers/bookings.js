@@ -1,8 +1,5 @@
 import { getDb } from '../db/connect.js';
-import {
-    createBooking,
-    getAllBookings as findAllBookings,
-    getBookingById as findBookingById
+import { createBooking, getAllBookings as findAllBookings, getBookingById as findBookingById
 } from '../models/bookings.js';
 
 // Renders the booking form for a given schedule.
