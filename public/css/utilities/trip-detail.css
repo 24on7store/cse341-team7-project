@@ -162,6 +162,12 @@ article.route-detail {
 
         .route-operating {
 
+            .month-filter-hint {
+                margin: 0 0 var(--space-sm) 0;
+                color: var(--clr-text-secondary);
+                font-size: var(--font-size-sm);
+            }
+
             .months-grid {
                 display: flex;
                 flex-wrap: wrap;
@@ -173,16 +179,34 @@ article.route-detail {
                     border: 1px solid var(--clr-border-light);
                     border-radius: var(--radius-md);
                     color: var(--clr-text-primary);
+                    font: inherit;
                     font-size: var(--font-size-sm);
                     font-weight: 500;
                     min-width: 48px;
                     text-align: center;
+                    cursor: pointer;
+
+                    &.is-selected,
+                    &:hover {
+                        background-color: var(--clr-primary);
+                        border-color: var(--clr-primary);
+                        color: var(--clr-text-alt-primary);
+                    }
                 }
             }
         }
 
         .route-schedules {
             grid-area: schedules;
+
+            .schedules-state {
+                margin-bottom: var(--space-md);
+                color: var(--clr-text-secondary);
+            }
+
+            .schedules-error {
+                color: #8f1f1f;
+            }
 
             .schedules-grid {
                 display: flex;
