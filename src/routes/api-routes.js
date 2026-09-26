@@ -5,6 +5,8 @@ import {
   getSchedulesForTripAndMonth
 } from '../controllers/schedules.js';
 
+//Added on week03 by Mackison
+//import { getAllTrips, getTripById } from '../controllers/trips.js';
 const router = Router();
 
 /**
@@ -54,6 +56,57 @@ router.get('/api/bookings', getAllBookings);
  *       500:
  *         description: Server error.
  */
+
+
+//Added on week03 by Mackison
+// ... KEEP EXISTING BOOKINGS/SCHEDULES ROUTER IMPORTS ...
+import { getAllTrips, getTripById } from '../controllers/trips.js';
+
+// ... KEEP EXISTING BOOKINGS/SCHEDULES ROUTES ...
+
+/**
+ * @swagger
+ * /api/trips:
+ *   get:
+ *     summary: Get all trips
+ *     description: Returns all scenic rail trips stored in the database.
+ *     tags:
+ *       - Trips
+ *     responses:
+ *       200:
+ *         description: A list of rail trips.
+ *       500:
+ *         description: Server error.
+ */
+router.get('/api/trips', getAllTrips);
+
+/**
+ * @swagger
+ * /api/trips/{id}:
+ *   get:
+ *     summary: Get a trip by ID
+ *     description: Returns a single scenic rail trip configuration matching the custom string ID.
+ *     tags:
+ *       - Trips
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The custom trip ID string.
+ *     responses:
+ *       200:
+ *         description: Detailed information for a single trip.
+ *       404:
+ *         description: Trip not found.
+ *       500:
+ *         description: Server error.
+ */
+router.get('/api/trips/:id', getTripById);
+
+
+
 router.get('/api/trips/:id/schedules', (req, res) => {
   if (req.query.month !== undefined && req.query.month !== '') {
     return getSchedulesForTripAndMonth(req, res);
