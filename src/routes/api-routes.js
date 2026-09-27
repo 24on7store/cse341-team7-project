@@ -20,4 +20,43 @@ const router = Router();
  */
 router.get('/api/bookings', requireApiRole('admin'), getAllBookings);
 
+/**
+ * @swagger
+ * /api/trips/{id}/schedules:
+ *   get:
+ *     summary: Get schedules for a trip
+ *     description: Returns the schedules for a trip. Pass a month query parameter to limit results to a specific month.
+ *     tags:
+ *       - Schedules
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The trip ID.
+ *       - in: query
+ *         name: month
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 12
+ *         description: Month number from 1 (January) to 12 (December).
+ *     responses:
+ *       200:
+ *         description: A list of schedules for the trip.
+ *       400:
+ *         description: Invalid month.
+ *       500:
+ *         description: Server error.
+ */
+router.get('/api/trips/:id/schedules', (req, res) => {
+  if (req.query.month !== undefined && req.query.month !== '') {
+    return getSchedulesForTripAndMonth(req, res);
+  }
+
+  return getSchedulesForTrip(req, res);
+});
+
 export default router;

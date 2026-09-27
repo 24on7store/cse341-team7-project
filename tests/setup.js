@@ -1,14 +1,17 @@
 import { afterAll, beforeAll, beforeEach, inject } from 'vitest';
-import { closeDb, connectToDb, getDb } from '../src/db/connect.js';
+import { closeDb, connectToDb, connectMongoose, getDb } from '../src/db/connect.js';
 import { initializeDatabase } from '../src/db/initialize.js';
 
 const connectionString = inject('MONGODB_TEST_URI');
 
 beforeAll(async () => {
-  await connectToDb({
+  const options = {
     connectionString,
     databaseName: 'kizuna-rail-test'
-  });
+  };
+
+  await connectToDb(options);
+  await connectMongoose(options);
 });
 
 beforeEach(async () => {
