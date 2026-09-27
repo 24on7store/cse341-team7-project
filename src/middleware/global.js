@@ -6,9 +6,9 @@ const setLocalVariables = (req, res, next) => {
     res.locals.NODE_ENV = process.env.NODE_ENV?.toLowerCase() || 'production';
 
     // Make any query parameters available to all templates
-    res.locals.query = req.query;
+    res.locals.user = req.session.user || null;
 
-    next();
+    return next();
 };
 
 export default setLocalVariables;
