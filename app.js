@@ -13,6 +13,21 @@ const __dirname = Path.dirname(__filename);
 
 const app = express();
 
+// Application-wide locals accessible in all templates (including error pages).
+app.locals.NODE_ENV = process.env.NODE_ENV?.toLowerCase() || 'production';
+app.locals.appVersion = pkg.version;
+
+// CORS headers for API access and Swagger UI.
+app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(200);
+    }
+    next();
+});
+
 // Add version info to res.locals for access in templates.
 app.use((req, res, next) => {
     res.locals.appVersion = pkg.version;
@@ -30,7 +45,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 app.use(
     session({
-        secret: process.env.SESSION_SECRET,
+        secret: process.env.SESSION_SECRET || 'kizuna-rail-secret-key-development',
         resave: false,
         saveUninitialized: false,
         cookie: {
@@ -52,14 +67,22 @@ app.use((req, res, next) => {
     next(err);
 });
 
-// Render the appropriate error page.
+// Render the appropriate error page or return JSON for API requests.
 app.use((err, req, res, next) => {
     const status = err.status || 500;
+
+    if (req.originalUrl?.startsWith('/api') || req.headers.accept?.includes('application/json')) {
+        return res.status(status).json({
+            error: err.message || 'Server Error'
+        });
+    }
+
     const template = status === 404 ? '404' : '500';
     const context = {
         title: status === 404 ? 'Page Not Found' : 'Server Error',
         error: err.message,
-        stack: err.stack
+        stack: err.stack,
+        NODE_ENV: req.app.locals.NODE_ENV || process.env.NODE_ENV || 'production'
     };
 
     return res.status(status).render(`errors/${template}`, context);

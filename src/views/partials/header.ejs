@@ -6,7 +6,7 @@
     <title><%= title %></title>
     <link rel="stylesheet" href="/css/main.css">
     <script src="/js/main.js"></script>
-    <% if (NODE_ENV.includes('dev')) { %>
+    <% if (locals.NODE_ENV && locals.NODE_ENV.includes('dev')) { %>
         <script>
             // Get the current hostname and port from the browser
             const host = window.location.hostname;
@@ -39,7 +39,7 @@
                     <li><a href="/trains">Trains</a></li>
                     <li><a href="/about">About</a></li>
 
-                    <% if (user) { %>
+                    <% if (locals.user) { %>
                         <li>Welcome, <%= user.displayName %></li>
 
                         <% if (user.role === 'admin') { %>

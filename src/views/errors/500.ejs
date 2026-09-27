@@ -7,7 +7,7 @@
     <a href="/">Return to homepage</a>.
 </p>
 
-<% if (NODE_ENV === 'development') { %>
+<% if (locals.NODE_ENV === 'development') { %>
 <details open>
     <summary>Error Details:</summary>
     <pre><%= error %></pre>
