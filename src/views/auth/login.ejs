@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> | Kizuna Rail</title>
+</head>
+<body>
+    <main>
+        <h1>Log In</h1>
+
+        <% if (typeof error !== 'undefined') { %>
+            <p role="alert"><%= error %></p>
+        <% } %>
+
+        <form action="/auth/login" method="POST">
+            <div>
+                <label for="username">Username</label>
+                <input
+                    type="text"
+                    id="username"
+                    name="username"
+                    value="<%= username || '' %>"
+                    required
+                >
+            </div>
+
+            <div>
+                <label for="password">Password</label>
+                <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    required
+                >
+            </div>
+
+            <button type="submit">Log In</button>
+        </form>
+
+        <p>
+            Don't have an account?
+            <a href="/auth/register">Create an account</a>
+        </p>
+    </main>
+</body>
+</html>

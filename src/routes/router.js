@@ -5,11 +5,15 @@ import { Router } from 'express';
 import { homePage, aboutPage, testErrorPage } from './index.js';
 import apiRoutes from './api-routes.js';
 import ejsRoutes from './ejs-routes.js';
+import authRouter from './auth.js';
+import { adminDashboard } from '../controllers/admin.js';
+import { requirePageRole } from '../middleware/auth.js';
 
 const router = Router();
 
 router.use(apiRoutes);
 router.use(ejsRoutes);
+router.use('/auth', authRouter);
 
 // Home page
 router.get('/', homePage);
@@ -19,6 +23,8 @@ router.get('/about', aboutPage);
 
 // Trains page
 router.get('/trains', trainsPage);
+
+router.get('/admin', requirePageRole('admin'), adminDashboard);
 
 // Trains API
 router.get('/api/trains', trainsApi);

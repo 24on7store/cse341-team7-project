@@ -1,4 +1,5 @@
 import express from 'express';
+import session from 'express-session';
 import swaggerUi from 'swagger-ui-express';
 import Path from 'path';
 import { fileURLToPath } from 'url';
@@ -26,6 +27,19 @@ app.set('views', Path.join(__dirname, 'src/views'));
 // Parse JSON and URL-encoded request bodies.
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+app.use(
+    session({
+        secret: process.env.SESSION_SECRET,
+        resave: false,
+        saveUninitialized: false,
+        cookie: {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 1000 * 60 * 60 * 24
+        }
+    })
+);
 
 app.use(globalMiddleware);
 app.use('/', routes);
