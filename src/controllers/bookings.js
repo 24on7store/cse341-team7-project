@@ -1,5 +1,9 @@
 import { getDb } from '../db/connect.js';
-import { createBooking, getAllBookings as findAllBookings, getBookingById as findBookingById
+import {
+    createBooking,
+    getAllBookings as findAllBookings,
+    getBookingsByPassengerEmail,
+    getBookingById as findBookingById
 } from '../models/bookings.js';
 
 // Renders the booking form for a given schedule.
@@ -106,7 +110,12 @@ export async function confirmationPage(req, res) {
 // API: GET /api/bookings
 export async function getAllBookings(req, res) {
     try {
-        const bookings = await findAllBookings();
+        const user = req.session.user;
+
+        const bookings =
+            user.role === 'admin'
+                ? await findAllBookings()
+                : await getBookingsByPassengerEmail(user.email);
 
         return res.status(200).json(bookings);
     } catch (error) {
