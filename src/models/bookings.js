@@ -19,6 +19,12 @@ export async function getAllBookings() {
   return Booking.find({}).lean();
 }
 
+export async function getBookingsByPassengerEmail(email) {
+  return Booking.find({
+    'passengers.email': email
+  }).lean();
+}
+
 export async function getBookingById(id) {
   return Booking.findOne({ id }).lean();
 }
