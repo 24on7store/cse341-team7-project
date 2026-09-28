@@ -3,7 +3,9 @@ import {
     createBooking,
     getAllBookings as findAllBookings,
     getBookingsByPassengerEmail,
-    getBookingById as findBookingById
+    getBookingById as findBookingById,
+    updateBooking as updateBookingModel,
+    deleteBooking as deleteBookingModel
 } from '../models/bookings.js';
 
 // Renders the booking form for a given schedule.
@@ -146,6 +148,80 @@ export async function getBookingById(req, res) {
 
         return res.status(500).json({
             error: 'Failed to fetch booking'
+        });
+    }
+}
+
+// API: PUT /api/bookings/:id
+export async function updateBooking(req, res) {
+    try {
+        const { id } = req.params;
+        const user = req.session.user;
+
+        const existingBooking = await findBookingById(id);
+
+        if (!existingBooking) {
+            return res.status(404).json({
+                error: 'Booking not found'
+            });
+        }
+
+        const isAdmin = user.role === 'admin';
+        const isPassenger = existingBooking.passengers.some(
+            (passenger) => passenger.email === user.email
+        );
+
+        if (!isAdmin && !isPassenger) {
+            return res.status(403).json({
+                error: 'You do not have permission to update this booking.'
+            });
+        }
+
+        const updatedBooking = await updateBookingModel(id, req.body);
+
+        return res.status(200).json(updatedBooking);
+    } catch (error) {
+        console.error('Error updating booking:', error);
+
+        return res.status(500).json({
+            error: 'Failed to update booking'
+        });
+    }
+}
+
+// API: DELETE /api/bookings/:id
+export async function deleteBooking(req, res) {
+    try {
+        const { id } = req.params;
+        const user = req.session.user;
+
+        const existingBooking = await findBookingById(id);
+
+        if (!existingBooking) {
+            return res.status(404).json({
+                error: 'Booking not found'
+            });
+        }
+
+        const isAdmin = user.role === 'admin';
+        const isPassenger = existingBooking.passengers.some(
+            (passenger) => passenger.email === user.email
+        );
+
+        if (!isAdmin && !isPassenger) {
+            return res.status(403).json({
+                error: 'You do not have permission to delete this booking.'
+            });
+        }
+
+        await deleteBookingModel(id);
+
+        return res.status(204).send();
+    } catch (error) {
+        console.error('Error deleting booking:', error);
+
+        return res.status(500).json({
+            error: 'Failed to delete booking'
         });
     }
 }
