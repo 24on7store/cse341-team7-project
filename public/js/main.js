@@ -121,6 +121,7 @@ const hookBookingsCatalog = async () => {
         }
 
         bookings.forEach((booking) => {
+
             const card = templateEl.content.cloneNode(true);
 
             card.querySelector('[data-field="id"]').textContent = booking.id;
@@ -143,11 +144,117 @@ const hookBookingsCatalog = async () => {
 
             booking.passengers.forEach((passenger) => {
                 const listItem = document.createElement('li');
+
                 listItem.textContent =
                     `${passenger.firstName} ${passenger.lastName} — ` +
                     `${passenger.email} — ${passenger.phone}`;
 
                 passengerList.appendChild(listItem);
+            });
+
+            const editForm = card.querySelector('[data-field="edit-form"]');
+            const editButton = card.querySelector('[data-action="edit"]');
+            const cancelButton = card.querySelector(
+                '[data-action="cancel-edit"]'
+            );
+            const deleteButton = card.querySelector('[data-action="delete"]');
+
+            const scheduleInput = card.querySelector(
+                '[data-field="edit-scheduleId"]'
+            );
+            const tripInput = card.querySelector(
+                '[data-field="edit-tripId"]'
+            );
+            const ticketClassInput = card.querySelector(
+                '[data-field="edit-ticketClass"]'
+            );
+            const selectedDayInput = card.querySelector(
+                '[data-field="edit-selectedDay"]'
+            );
+
+            editButton.addEventListener('click', () => {
+                scheduleInput.value = booking.scheduleId;
+                tripInput.value = booking.tripId;
+                ticketClassInput.value = booking.ticketClass;
+                selectedDayInput.value = booking.selectedDay;
+
+                editForm.hidden = false;
+                editButton.hidden = true;
+            });
+
+            cancelButton.addEventListener('click', () => {
+                editForm.hidden = true;
+                editButton.hidden = false;
+            });
+
+            editForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+
+                const updatedBooking = {
+                    scheduleId: Number(scheduleInput.value),
+                    tripId: tripInput.value,
+                    ticketClass: ticketClassInput.value,
+                    selectedDay: selectedDayInput.value,
+                    passengers: booking.passengers
+                };
+
+                try {
+                    const response = await fetch(
+                        `/api/bookings/${booking.id}`,
+                        {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(updatedBooking)
+                        }
+                    );
+
+                    if (!response.ok) {
+                        const error = await response.json();
+
+                        throw new Error(
+                            error.error || 'Failed to update booking.'
+                        );
+                    }
+
+                    await hookBookingsCatalog();
+                } catch (error) {
+                    console.error('Error updating booking:', error);
+                    alert(error.message);
+                }
+            });
+
+            deleteButton.addEventListener('click', async () => {
+                const confirmed = window.confirm(
+                    `Are you sure you want to delete booking ${booking.id}?`
+                );
+
+                if (!confirmed) {
+                    return;
+                }
+
+                try {
+                    const response = await fetch(
+                        `/api/bookings/${booking.id}`,
+                        {
+                            method: 'DELETE'
+                        }
+                    );
+
+                    if (!response.ok) {
+                        const error = await response.json();
+
+                        throw new Error(
+                            error.error || 'Failed to delete booking.'
+                        );
+                    }
+
+                    await hookBookingsCatalog();
+                } catch (error) {
+                    console.error('Error deleting booking:', error);
+                    alert(error.message);
+                }
             });
 
             fragment.appendChild(card);

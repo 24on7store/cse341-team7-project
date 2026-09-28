@@ -5,6 +5,10 @@ import {
   updateBooking,
   deleteBooking
 } from '../controllers/bookings.js';
+import {
+  getSchedulesForTrip,
+  getSchedulesForTripAndMonth
+} from '../controllers/schedules.js';
 
 const router = Router();
 
