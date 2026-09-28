@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { getAllBookings } from '../controllers/bookings.js';
-import { requireApiRole } from '../middleware/auth.js';
+import { requireApiLogin } from '../middleware/auth.js';
 
 const router = Router();
 
@@ -18,7 +18,7 @@ const router = Router();
  *       500:
  *         description: Server error.
  */
-router.get('/api/bookings', requireApiRole('admin'), getAllBookings);
+router.get('/api/bookings', requireApiLogin, getAllBookings);
 
 /**
  * @swagger
