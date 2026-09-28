@@ -1,6 +1,10 @@
 import { Router } from 'express';
-import { getAllBookings } from '../controllers/bookings.js';
 import { requireApiLogin } from '../middleware/auth.js';
+import {
+  getAllBookings,
+  updateBooking,
+  deleteBooking
+} from '../controllers/bookings.js';
 
 const router = Router();
 
@@ -19,6 +23,10 @@ const router = Router();
  *         description: Server error.
  */
 router.get('/api/bookings', requireApiLogin, getAllBookings);
+
+router.put('/api/bookings/:id', requireApiLogin, updateBooking);
+
+router.delete('/api/bookings/:id', requireApiLogin, deleteBooking);
 
 /**
  * @swagger
