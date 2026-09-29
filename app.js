@@ -7,11 +7,12 @@ import pkg from './package.json' with { type: 'json' };
 import swaggerSpec from './swagger.js';
 import globalMiddleware from './src/middleware/global.js';
 import routes from './src/routes/router.js';
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = Path.dirname(__filename);
 
 const app = express();
+app.locals.NODE_ENV = process.env.NODE_ENV?.toLowerCase() || 'production';
+app.locals.user = null;
 
 // Add version info to res.locals for access in templates.
 app.use((req, res, next) => {

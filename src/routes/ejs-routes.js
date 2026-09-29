@@ -10,7 +10,7 @@ const router = Router();
 // Protected bookings admin page
 router.get('/bookings-admin', requirePageLogin, bookingsAdminPage);
 
-export default router;
+// export default router;
 //Added on week 03 about the trips  by Mackison
 router.get('/trips', renderTripsList);
 router.get('/trips/:tripId', tripDetailsPage);
