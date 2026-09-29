@@ -1,6 +1,14 @@
 import { Router } from 'express';
-import { getAllBookings } from '../controllers/bookings.js';
-import { requireApiRole } from '../middleware/auth.js';
+import { requireApiLogin } from '../middleware/auth.js';
+import {
+  getAllBookings,
+  updateBooking,
+  deleteBooking
+} from '../controllers/bookings.js';
+import {
+  getSchedulesForTrip,
+  getSchedulesForTripAndMonth
+} from '../controllers/schedules.js';
 
 //Added on week03 by Mackison
 //import { getAllTrips, getTripById } from '../controllers/trips.js';
@@ -20,7 +28,11 @@ const router = Router();
  *       500:
  *         description: Server error.
  */
-router.get('/api/bookings', requireApiRole('admin'), getAllBookings);
+router.get('/api/bookings', requireApiLogin, getAllBookings);
+
+router.put('/api/bookings/:id', requireApiLogin, updateBooking);
+
+router.delete('/api/bookings/:id', requireApiLogin, deleteBooking);
 
 /**
  * @swagger

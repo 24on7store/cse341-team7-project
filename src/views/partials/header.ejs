@@ -1,12 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= title %></title>
+    <title>
+        <%= title %>
+    </title>
     <link rel="stylesheet" href="/css/main.css">
     <script src="/js/main.js"></script>
-    <% if (NODE_ENV.includes('dev')) { %>
+    <% if (NODE_ENV.includes('development')) { %>
         <script>
             // Get the current hostname and port from the browser
             const host = window.location.hostname;
@@ -19,8 +22,9 @@
                 setTimeout(() => location.reload(), 2000);
             };
         </script>
-    <% } %>
+        <% } %>
 </head>
+
 <body>
     <header class="content-grid">
         <div class="content">
@@ -40,20 +44,21 @@
                     <li><a href="/about">About</a></li>
 
                     <% if (user) { %>
-                        <li>Welcome, <%= user.displayName %></li>
+                        <li>Welcome, <%= user.displayName %>
+                        </li>
 
-                        <% if (user.role === 'admin') { %>
+                        <% if (user.role==='admin' ) { %>
                             <li><a href="/admin">Admin Dashboard</a></li>
-                        <% } %>
+                            <% } %>
 
-                        <li><a href="/auth/logout">Log Out</a></li>
-                    <% } else { %>
-                        <li><a href="/auth/login">Log In</a></li>
-                        <li><a href="/auth/register">Register</a></li>
-                    <% } %>
+                                <li><a href="/auth/logout">Log Out</a></li>
+                                <% } else { %>
+                                    <li><a href="/auth/login">Log In</a></li>
+                                    <li><a href="/auth/register">Register</a></li>
+                                    <% } %>
 
-                    <li><a href="/404">404</a></li>
-                    <li><a href="/500">500</a></li>
+                                        <li><a href="/404">404</a></li>
+                                        <li><a href="/500">500</a></li>
                 </ul>
             </nav>
         </div>

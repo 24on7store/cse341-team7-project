@@ -55,6 +55,37 @@
                 <h3>Passengers</h3>
                 <ul data-field="passengers"></ul>
             </div>
+            <div class="booking-actions">
+                <button type="button" data-action="edit">Edit</button>
+                <button type="button" data-action="delete">Delete</button>
+            </div>
+
+            <form class="booking-edit-form" data-field="edit-form" hidden>
+                <label>
+                    Schedule ID
+                    <input type="number" data-field="edit-scheduleId" required>
+                </label>
+
+                <label>
+                    Trip ID
+                    <input type="text" data-field="edit-tripId" required>
+                </label>
+
+                <label>
+                    Ticket Class
+                    <input type="text" data-field="edit-ticketClass" required>
+                </label>
+
+                <label>
+                    Travel Day
+                    <input type="text" data-field="edit-selectedDay" required>
+                </label>
+                
+            <div class="booking-edit-actions">
+                <button type="submit">Save Changes</button>
+                <button type="button" data-action="cancel-edit">Cancel</button>
+            </div>
+            </form>
         </article>
     </template>
 </section>
