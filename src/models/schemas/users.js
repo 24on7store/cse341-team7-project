@@ -24,11 +24,15 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    //Replacing string enum with objectId referenved required by Week 04: Authentication and Authorization
+    // #2 step 03 activies
     role: {
-      type: String,
+      //type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Role',
       required: true,
-      enum: ['user', 'admin'],
-      default: 'user',
+      // enum: ['user', 'admin'],
+      // default: 'user',
     },
   },
   {

@@ -112,7 +112,9 @@ export async function confirmationPage(req, res) {
 // API: GET /api/bookings
 export async function getAllBookings(req, res) {
     try {
-        const user = req.session.user;
+         // CHANGED FROM req.session.user TO req.user FOR STEP 5 CONSISTENCY:
+        // const user = req.session.user;
+        const user = req.user;
 
         const bookings =
             user.role === 'admin'
@@ -156,7 +158,9 @@ export async function getBookingById(req, res) {
 export async function updateBooking(req, res) {
     try {
         const { id } = req.params;
-        const user = req.session.user;
+         // CHANGED FROM req.session.user TO req.user FOR STEP 5 CONSISTENCY:
+        // const user = req.session.user;
+        const user = req.user;
 
         const existingBooking = await findBookingById(id);
 
@@ -193,7 +197,9 @@ export async function updateBooking(req, res) {
 export async function deleteBooking(req, res) {
     try {
         const { id } = req.params;
-        const user = req.session.user;
+         // CHANGED FROM req.session.user TO req.user FOR STEP 5 CONSISTENCY:
+        // const user = req.session.user;
+        const user = req.user;
 
         const existingBooking = await findBookingById(id);
 

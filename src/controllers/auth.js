@@ -5,6 +5,9 @@ import {
   getUserByEmail
 } from '../models/users.js';
 
+//Import the role model for solving ID objects
+import Role from '../models/schemas/roles.js';
+
 export function registerPage(req, res) {
   return res.render('auth/register', {
     title: 'Register',
@@ -44,6 +47,12 @@ export async function register(req, res) {
       });
     }
 
+    //Added to resolve the objectID  for the new user role
+    let defaultRole = await Role.findOne({ name: 'user' });
+    if (!defaultRole) {
+      defaultRole = await Role.findOne({ name: 'customer' });
+    }
+
     const passwordHash = await bcrypt.hash(password, 12);
 
     await createUser({
@@ -51,7 +60,9 @@ export async function register(req, res) {
       username,
       email,
       passwordHash,
-      role: 'user'
+      //Added to save the Mongoose reference required by step 2
+      // role: 'user'
+      role: defaultRole._id
     });
 
     return res.redirect('/auth/login');
@@ -112,15 +123,26 @@ export async function login(req, res) {
       });
     }
 
+    // Determine the text name of the role 
+    const roleName = user.role && typeof user.role === 'object' ? user.role.name : user.role;
+
+
     req.session.user = {
       id: user._id.toString(),
       displayName: user.displayName,
       username: user.username,
       email: user.email,
-      role: user.role
+      // role: user.role
+      role: roleName
     };
 
-    return res.redirect('/');
+    //Feature set 2 conditional redirection dynamic logic
+    if (roleName === 'admin'){
+      return res.redirect('/admin');
+    } else {
+      return res.redirect('/dashboard');
+    }
+    // return res.redirect('/');
   } catch (error) {
     console.error('Login error:', error);
 

@@ -1,0 +1,103 @@
+<%- include('partials/header') %>
+
+<main class="container my-5">
+    <!-- Welcome message with the user's display name -->
+    <header class="dashboard-banner mb-4 p-4 bg-light rounded shadow-sm">
+        <h1 class="display-5">Welcome back, <%= user.displayName %>!</h1>
+        <p class="text-muted mb-0">Logged in as: <strong id="user-email"><%= user.email %></strong></p>
+    </header>
+
+    <div class="row g-4">
+        <!-- Requirements: Quick navigation links to Admin Views -->
+        <section class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h3 class="card-title h5 mb-3">Management Portal</h3>
+                    <div class="d-grid gap-2">
+                        <a href="/bookings-admin" class="btn btn-outline-primary text-start">
+                             Link to the booking admin page
+                        </a>
+                        <a href="/admin" class="btn btn-outline-secondary text-start">
+                             Link to the user admin page
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Requirement: Dynamic, client-side hydrated list of passenger bookings -->
+        <section class="col-md-8">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h3 class="card-title h5 mb-3">Your Bookings & Itineraries</h3>
+                    
+                    <div id="bookings-loading" class="alert alert-info py-2">
+                        Connecting to train manifests and matching passenger rosters...
+                    </div>
+                    
+                    <ul id="bookings-list" class="list-group list-group-flush" style="display: none;">
+                        <!-- Hydrated dynamically through client-side JavaScript -->
+                    </ul>
+                    
+                    <div id="no-bookings-msg" class="alert alert-warning py-2 mb-0" style="display: none;">
+                        No upcoming reservations found matching your account email.
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</main>
+
+<!-- Client-side hydration script -->
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+    // Read the email securely out of the authenticated DOM text markup
+    const userEmail = document.getElementById('user-email').textContent.trim();
+    
+    const loadingEl = document.getElementById('bookings-loading');
+    const listEl = document.getElementById('bookings-list');
+    const emptyEl = document.getElementById('no-bookings-msg');
+
+    try {
+        // Query your booking API, passing the user email context
+        const response = await fetch(`/api/bookings?email=${encodeURIComponent(userEmail)}`);
+        
+        if (!response.ok) {
+            throw new Error('Failed to retrieve ticket rosters from the server.');
+        }
+
+        const bookings = await response.json();
+        loadingEl.style.display = 'none';
+
+        // Filter and evaluate manifests where their email matches one of the passengers
+        if (!bookings || bookings.length === 0) {
+            emptyEl.style.display = 'block';
+            return;
+        }
+
+        listEl.style.display = 'block';
+        bookings.forEach(booking => {
+            const li = document.createElement('li');
+            li.className = 'list-group-item p-3 border-bottom d-flex justify-content-between align-items-center';
+            
+            // Build scannable display cards for each passenger match
+            li.innerHTML = `
+                <div>
+                    <h5 class="mb-1 text-primary">Booking Reference: #${booking.id || booking._id}</h5>
+                    <small class="text-muted d-block">Trip Reference Code: ${booking.tripId || 'N/A'}</small>
+                    <small class="text-muted">Seats Booked: ${booking.passengers ? booking.passengers.length : 1}</small>
+                </div>
+                <span class="badge bg-success rounded-pill">Confirmed Ticket</span>
+            `;
+            listEl.appendChild(li);
+        });
+
+    } catch (error) {
+        console.error('Dynamic Hydration Error:', error);
+        loadingEl.className = 'alert alert-danger py-2';
+        loadingEl.textContent = 'Unable to complete client-side booking data-hydration at this time.';
+    }
+});
+</script>
+
+<%- include('partials/footer') %>

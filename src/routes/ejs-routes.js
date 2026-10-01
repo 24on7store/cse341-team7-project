@@ -5,6 +5,8 @@ import { requirePageLogin } from '../middleware/auth.js';
 //Added on week03 by Mackison
 import { renderTripsList, tripDetailsPage } from '../controllers/trips.js';
 
+//Added on week 04 to import the new dashboard controller
+import { userDashboardPage } from '../controllers/dashboard.js'
 const router = Router();
 
 // Protected bookings admin page
