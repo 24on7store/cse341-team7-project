@@ -7,6 +7,8 @@ const roleSchema = new mongoose.Schema(
       required: true,
       unique: true,
       trim: true,
+      //Added enum restriction to the name to prevent ramdom string entries
+      enum: ['customer', 'admin', 'user']
     },
   },
   {

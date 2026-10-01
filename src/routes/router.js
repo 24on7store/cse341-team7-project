@@ -7,13 +7,16 @@ import apiRoutes from './api-routes.js';
 import ejsRoutes from './ejs-routes.js';
 import authRouter from './auth.js';
 import { adminDashboard } from '../controllers/admin.js';
-import { requirePageRole } from '../middleware/auth.js';
+import { requirePageRole, requirePageLogin } from '../middleware/auth.js';
+import { userDashboardPage } from '../controllers/dashboard.js';
 
 const router = Router();
 
 router.use(apiRoutes);
 router.use(ejsRoutes);
 router.use('/auth', authRouter);
+
+
 
 // Home page
 router.get('/', homePage);
@@ -23,6 +26,8 @@ router.get('/about', aboutPage);
 
 // Trains page
 router.get('/trains', trainsPage);
+
+router.get('/dashboard', requirePageLogin, userDashboardPage);
 
 router.get('/admin', requirePageRole('admin'), adminDashboard);
 

@@ -21,8 +21,17 @@ const starterCollections = [
 
 const seedUsers = async (db) => {
   const users = db.collection('users');
+  //Added on week 04 #2 step 2
+  const rolesCollection = db.collection('roles');
 
   await users.deleteMany({});
+//Added to look up freshly admin role document to catch it s unique id
+const adminRole = await rolesCollection.findOne({ name: 'admin' });
+if (!adminRole) {
+  throw new Error('Admin role not found. Ensure roles are seeded before seeding users. ')
+
+}
+
 
   const passwordHash = await bcrypt.hash('Admin123!', 12);
 
@@ -31,7 +40,9 @@ const seedUsers = async (db) => {
     username: 'admin',
     email: 'admin@kizuna-rail.local',
     passwordHash,
-    role: 'admin'
+    // role: 'admin'
+    //Edited to store the explicit ObjectId reference mapping to the roles connection
+    role: adminRole._id
   });
 };
 
