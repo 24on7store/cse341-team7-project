@@ -1,0 +1,111 @@
+.admin-dashboard {
+  padding-block: var(--space-xl) var(--space-2xl);
+}
+
+.admin-dashboard__hero {
+  margin-bottom: var(--space-xl);
+  padding: var(--space-xl);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-lg);
+  background: var(--clr-surface-alt);
+}
+
+.admin-dashboard__eyebrow {
+  margin: 0 0 var(--space-xs);
+  color: var(--clr-primary);
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-dashboard__hero h1 {
+  margin-bottom: var(--space-sm);
+}
+
+.admin-dashboard__hero p {
+  max-width: 60ch;
+  margin: 0;
+  color: var(--clr-text-secondary);
+}
+
+.admin-dashboard__section-title {
+  margin-bottom: var(--space-md);
+  font-size: var(--font-size-xl);
+}
+
+.admin-dashboard__grid {
+  display: grid;
+  gap: var(--space-lg);
+}
+
+.admin-dashboard__card {
+  display: flex;
+  flex-direction: column;
+  min-height: 190px;
+  padding: var(--space-lg);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-lg);
+  background: var(--clr-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.admin-dashboard__card h3 {
+  margin-bottom: var(--space-xs);
+}
+
+.admin-dashboard__card p {
+  flex: 1;
+  margin: 0 0 var(--space-lg);
+  color: var(--clr-text-secondary);
+}
+
+.admin-dashboard__card-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--clr-primary);
+  border-radius: var(--radius-sm);
+  background: var(--clr-primary);
+  color: var(--clr-text-alt-primary);
+  font-weight: 700;
+}
+
+.admin-dashboard__card-link:hover,
+.admin-dashboard__card-link:focus {
+  background: var(--clr-primary-light);
+  color: var(--clr-text-primary);
+}
+
+.admin-dashboard__card-link--secondary {
+  background: transparent;
+  color: var(--clr-primary);
+}
+
+.admin-dashboard__card-link--secondary:hover,
+.admin-dashboard__card-link--secondary:focus {
+  background: var(--clr-primary-pale);
+  color: var(--clr-text-primary);
+}
+
+.admin-dashboard__back-link {
+  display: inline-block;
+  margin-top: var(--space-xl);
+}
+
+@media (min-width: 700px) {
+  .admin-dashboard {
+    padding-block: var(--space-2xl);
+  }
+
+  .admin-dashboard__hero {
+    padding: var(--space-2xl);
+  }
+
+  .admin-dashboard__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
