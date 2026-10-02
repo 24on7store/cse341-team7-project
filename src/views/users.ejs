@@ -1,0 +1,18 @@
+<%- include('partials/header') %>
+
+    <main class="content-grid">
+        <section class="content user-admin" data-current-user-id="<%= user.id %>"
+            data-is-admin="<%= user.role === 'admin' %>">
+            <header class="user-admin__header">
+                <h1>User Administration</h1>
+                <p>Manage the account information available to you.</p>
+            </header>
+
+            <p id="user-admin-status" class="user-admin__status" role="status">Loading users...</p>
+            <div id="user-list" class="user-admin__list"></div>
+        </section>
+    </main>
+
+    <script src="/js/user-admin.js" defer></script>
+
+    <%- include('partials/footer') %>

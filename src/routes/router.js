@@ -9,6 +9,7 @@ import authRouter from './auth.js';
 import { adminDashboard } from '../controllers/admin.js';
 import { requirePageRole, requirePageLogin } from '../middleware/auth.js';
 import { userDashboardPage } from '../controllers/dashboard.js';
+import { usersAdminPage } from '../controllers/users.js';
 
 const router = Router();
 
@@ -28,6 +29,8 @@ router.get('/about', aboutPage);
 router.get('/trains', trainsPage);
 
 router.get('/dashboard', requirePageLogin, userDashboardPage);
+
+router.get('/users-admin', requirePageLogin, usersAdminPage);
 
 router.get('/admin', requirePageRole('admin'), adminDashboard);
 

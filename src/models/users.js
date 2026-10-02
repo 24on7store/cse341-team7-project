@@ -23,7 +23,32 @@ export async function getUserByEmail(email) {
 export async function getUserById(id) {
   // return User.findById(id).lean();
   //Added .populate('role') so sthat dashborad work on all requests
-  return User.findById(id).populate('role').lean();
+  return User.findById(id).select('-passwordHash').populate('role').lean();
+}
+
+export async function getAllUsers() {
+  return User.find({})
+    .select('-passwordHash')
+    .populate('role')
+    .lean();
+}
+
+export async function updateUser(id, userData) {
+  return User.findByIdAndUpdate(id, userData, {
+    new: true,
+    runValidators: true
+  })
+    .select('-passwordHash')
+    .populate('role')
+    .lean();
+}
+
+export async function deleteUser(id) {
+  return User.findByIdAndDelete(id).lean();
+}
+
+export async function getRoleByName(name) {
+  return Role.findOne({ name }).lean();
 }
 
 

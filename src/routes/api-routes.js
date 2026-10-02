@@ -9,10 +9,19 @@ import {
   getSchedulesForTrip,
   getSchedulesForTripAndMonth
 } from '../controllers/schedules.js';
+import {
+  deleteUser,
+  getUsers,
+  updateUser
+} from '../controllers/users.js';
 
 //Added on week03 by Mackison
 //import { getAllTrips, getTripById } from '../controllers/trips.js';
 const router = Router();
+
+router.get('/api/users', requireApiLogin, getUsers);
+router.put('/api/users/:id', requireApiLogin, updateUser);
+router.delete('/api/users/:id', requireApiLogin, deleteUser);
 
 /**
  * @swagger
