@@ -19,8 +19,119 @@ import {
 //import { getAllTrips, getTripById } from '../controllers/trips.js';
 const router = Router();
 
+/**
+ * @swagger
+ * /api/users:
+ *   get:
+ *     summary: List users available to the signed-in user
+ *     description: Admins receive all users. Other authenticated users receive only their own sanitized profile.
+ *     tags:
+ *       - Users
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: A list of users without password hashes.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/User'
+ *       401:
+ *         description: Authentication is required or the session user no longer exists.
+ *       500:
+ *         description: Server error.
+ */
 router.get('/api/users', requireApiLogin, getUsers);
+
+/**
+ * @swagger
+ * /api/users/{id}:
+ *   put:
+ *     summary: Update a user
+ *     description: Users may update themselves. Admins may update any user and may change the role.
+ *     tags:
+ *       - Users
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: MongoDB user ID.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - displayName
+ *               - username
+ *               - email
+ *             properties:
+ *               displayName:
+ *                 type: string
+ *               username:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               role:
+ *                 type: string
+ *                 enum: [user, admin]
+ *     responses:
+ *       200:
+ *         description: The updated sanitized user.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *       400:
+ *         description: Invalid profile data or duplicate username/email.
+ *       401:
+ *         description: Authentication is required.
+ *       403:
+ *         description: The signed-in user cannot update this target.
+ *       404:
+ *         description: User not found.
+ *       500:
+ *         description: Server error.
+ */
 router.put('/api/users/:id', requireApiLogin, updateUser);
+
+/**
+ * @swagger
+ * /api/users/{id}:
+ *   delete:
+ *     summary: Delete a user
+ *     description: Users may delete themselves. Admins may delete any user.
+ *     tags:
+ *       - Users
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: MongoDB user ID.
+ *     responses:
+ *       204:
+ *         description: User deleted successfully.
+ *       401:
+ *         description: Authentication is required.
+ *       403:
+ *         description: The signed-in user cannot delete this target.
+ *       404:
+ *         description: User not found.
+ *       500:
+ *         description: Server error.
+ */
 router.delete('/api/users/:id', requireApiLogin, deleteUser);
 
 /**
@@ -28,19 +139,97 @@ router.delete('/api/users/:id', requireApiLogin, deleteUser);
  * /api/bookings:
  *   get:
  *     summary: Get all bookings
- *     description: Returns all bookings stored in the database.
+ *     description: Admins receive all bookings. Other authenticated users receive bookings matching their email.
  *     tags:
  *       - Bookings
+ *     security:
+ *       - cookieAuth: []
  *     responses:
  *       200:
- *         description: A list of bookings.
+ *         description: A list of bookings visible to the signed-in user.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Booking'
+ *       401:
+ *         description: Authentication is required.
  *       500:
  *         description: Server error.
  */
 router.get('/api/bookings', requireApiLogin, getAllBookings);
 
+/**
+ * @swagger
+ * /api/bookings/{id}:
+ *   put:
+ *     summary: Update a booking
+ *     description: Admins may update any booking. Other authenticated users may update a booking containing their passenger email.
+ *     tags:
+ *       - Bookings
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Booking confirmation ID.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Booking'
+ *     responses:
+ *       200:
+ *         description: The updated booking.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Booking'
+ *       401:
+ *         description: Authentication is required.
+ *       403:
+ *         description: The signed-in user is not allowed to update this booking.
+ *       404:
+ *         description: Booking not found.
+ *       500:
+ *         description: Server error.
+ */
 router.put('/api/bookings/:id', requireApiLogin, updateBooking);
 
+/**
+ * @swagger
+ * /api/bookings/{id}:
+ *   delete:
+ *     summary: Delete a booking
+ *     description: Admins may delete any booking. Other authenticated users may delete a booking containing their passenger email.
+ *     tags:
+ *       - Bookings
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Booking confirmation ID.
+ *     responses:
+ *       204:
+ *         description: Booking deleted successfully.
+ *       401:
+ *         description: Authentication is required.
+ *       403:
+ *         description: The signed-in user is not allowed to delete this booking.
+ *       404:
+ *         description: Booking not found.
+ *       500:
+ *         description: Server error.
+ */
 router.delete('/api/bookings/:id', requireApiLogin, deleteBooking);
 
 /**
@@ -69,6 +258,12 @@ router.delete('/api/bookings/:id', requireApiLogin, deleteBooking);
  *     responses:
  *       200:
  *         description: A list of schedules for the trip.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Schedule'
  *       400:
  *         description: Invalid month.
  *       500:
@@ -93,6 +288,12 @@ import { getAllTrips, getTripById } from '../controllers/trips.js';
  *     responses:
  *       200:
  *         description: A list of rail trips.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Trip'
  *       500:
  *         description: Server error.
  */
@@ -116,6 +317,10 @@ router.get('/api/trips', getAllTrips);
  *     responses:
  *       200:
  *         description: Detailed information for a single trip.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Trip'
  *       404:
  *         description: Trip not found.
  *       500:
