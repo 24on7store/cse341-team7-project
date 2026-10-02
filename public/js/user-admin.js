@@ -92,7 +92,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
         if (!response.ok) {
-            throw new Error('Unable to load users.');
+            let message = `Unable to load users (${response.status}).`;
+            try {
+                const result = await response.json();
+                message = result.error || result.message || message;
+            } catch (error) {
+                console.error('Unable to read user API error:', error);
+            }
+            throw new Error(message);
         }
         renderUsers(await response.json());
     };

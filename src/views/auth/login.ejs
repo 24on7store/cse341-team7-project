@@ -1,47 +1,32 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= title %> | Kizuna Rail</title>
-</head>
-<body>
-    <main>
-        <h1>Log In</h1>
+<%- include('../partials/header') %>
 
-        <% if (typeof error !== 'undefined') { %>
-            <p role="alert"><%= error %></p>
-        <% } %>
+    <section class="auth-page content">
+        <header class="auth-page__header">
+            <h1>Log In</h1>
+            <p>Sign in to manage your Kizuna Rail account.</p>
+        </header>
 
-        <form action="/auth/login" method="POST">
-            <div>
-                <label for="username">Username</label>
-                <input
-                    type="text"
-                    id="username"
-                    name="username"
-                    value="<%= username || '' %>"
-                    required
-                >
-            </div>
+        <% if (typeof error !=='undefined' ) { %>
+            <p class="auth-page__error" role="alert">
+                <%= error %>
+            </p>
+            <% } %>
 
-            <div>
-                <label for="password">Password</label>
-                <input
-                    type="password"
-                    id="password"
-                    name="password"
-                    required
-                >
-            </div>
+                <form class="auth-page__form" action="/auth/login" method="POST">
+                    <label class="auth-page__field" for="username">
+                        Username
+                        <input type="text" id="username" name="username" value="<%= username || '' %>" required>
+                    </label>
 
-            <button type="submit">Log In</button>
-        </form>
+                    <label class="auth-page__field" for="password">
+                        Password
+                        <input type="password" id="password" name="password" required>
+                    </label>
 
-        <p>
-            Don't have an account?
-            <a href="/auth/register">Create an account</a>
-        </p>
-    </main>
-</body>
-</html>
+                    <button class="auth-page__submit" type="submit">Log In</button>
+                </form>
+
+                <p class="auth-page__switch">Don't have an account? <a href="/auth/register">Create an account</a></p>
+    </section>
+
+    <%- include('../partials/footer') %>

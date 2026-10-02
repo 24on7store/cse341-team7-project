@@ -25,12 +25,12 @@ const seedUsers = async (db) => {
   const rolesCollection = db.collection('roles');
 
   await users.deleteMany({});
-//Added to look up freshly admin role document to catch it s unique id
-const adminRole = await rolesCollection.findOne({ name: 'admin' });
-if (!adminRole) {
-  throw new Error('Admin role not found. Ensure roles are seeded before seeding users. ')
+  //Added to look up freshly admin role document to catch it s unique id
+  const adminRole = await rolesCollection.findOne({ name: 'admin' });
+  if (!adminRole) {
+    throw new Error('Admin role not found. Ensure roles are seeded before seeding users. ')
 
-}
+  }
 
 
   const passwordHash = await bcrypt.hash('Admin123!', 12);

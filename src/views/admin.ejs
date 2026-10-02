@@ -1,31 +1,32 @@
-<!DOCTYPE html>
-<html lang="en">
+<%- include('partials/header') %>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>
-        <%= title %> | Kizuna Rail
-    </title>
-</head>
+    <section class="admin-dashboard content">
+        <header class="admin-dashboard__hero">
+            <p class="admin-dashboard__eyebrow">Kizuna Rail operations</p>
+            <h1>Admin Dashboard</h1>
+            <p>Keep bookings and user accounts organized from one place.</p>
+        </header>
 
-<body>
-    <main>
-        <h1>Admin Dashboard</h1>
+        <section aria-labelledby="admin-tools-heading">
+            <h2 id="admin-tools-heading" class="admin-dashboard__section-title">Management tools</h2>
 
-        <p>Welcome to the Admin Dashboard.</p>
+            <div class="admin-dashboard__grid">
+                <article class="admin-dashboard__card">
+                    <h3>Bookings</h3>
+                    <p>Review, update, and remove passenger bookings.</p>
+                    <a class="admin-dashboard__card-link" href="/bookings-admin">Manage bookings</a>
+                </article>
 
-        <p>
-            <a href="/">Return to Home</a>
-        </p>
-        <p>
-            <a href="/bookings-admin">Manage Bookings</a>
-        </p>
-        <p>
-            <a href="/users-admin">Manage Users</a>
-        </p>
+                <article class="admin-dashboard__card">
+                    <h3>Users</h3>
+                    <p>Manage account details and access roles securely.</p>
+                    <a class="admin-dashboard__card-link admin-dashboard__card-link--secondary"
+                        href="/users-admin">Manage users</a>
+                </article>
+            </div>
+        </section>
 
-    </main>
-</body>
+        <a class="admin-dashboard__back-link" href="/">Return to home</a>
+    </section>
 
-</html>
+    <%- include('partials/footer') %>

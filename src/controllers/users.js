@@ -31,7 +31,7 @@ export async function getUsers(req, res) {
             : await getUserById(req.user.id);
 
         if (req.user.role !== 'admin' && !users) {
-            return res.status(404).json({ error: 'User not found' });
+            return res.status(401).json({ error: 'Your session has expired. Please log in again.' });
         }
 
         return res.status(200).json(req.user.role === 'admin' ? users : [users]);
