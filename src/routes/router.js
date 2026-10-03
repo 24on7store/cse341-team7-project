@@ -31,8 +31,44 @@ router.get('/dashboard', requirePageLogin, userDashboardPage);
 
 router.get('/admin', requirePageRole('admin'), adminDashboard);
 
+/**
+ * @swagger
+ * /api/trains:
+ *   get:
+ *     summary: Get paginated trains
+ *     description: Returns a paginated list of trains.
+ *     tags:
+ *       - Trains
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Page number.
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 50
+ *           default: 10
+ *         description: Number of trains to return per page.
+ *     responses:
+ *       200:
+ *         description: Paginated list of trains.
+ *       400:
+ *         description: Invalid page or limit value.
+ *       500:
+ *         description: Server error.
+ */
+
 // Trains API
 router.get('/api/trains', trainsApi);
+
 router.get('/api/trains/:id', getTrainById);
 
 // Rail trips

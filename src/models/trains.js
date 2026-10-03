@@ -2,9 +2,22 @@
 import Train from './schemas/trains.js';
 
 export async function getTrainById(id) {
-  return Train.findOne({ id }).lean();
 }
 
-export async function getAllTrains() {
-  return Train.find({}).lean();
+export async function getAllTrains({ page = 1, limit = 10 } = {}) {
+  const skip = (page - 1) * limit;
+
+  const [data, totalItems] = await Promise.all([
+    Train.find({})
+      .sort({ id: 1 })
+      .skip(skip)
+      .limit(limit)
+      .lean(),
+    Train.countDocuments({})
+  ]);
+
+  return {
+    data,
+    totalItems
+  };
 }

@@ -39,53 +39,127 @@ const hookTrainsCatalog = async () => {
     const templateEl = document.getElementById('train-card-template');
     const loadingEl = document.getElementById('trains-loading');
     const errorEl = document.getElementById('trains-error');
+    const paginationEl = document.getElementById('trains-pagination');
+    const previousButton = document.getElementById('trains-prev');
+    const nextButton = document.getElementById('trains-next');
+    const pageInfoEl = document.getElementById('trains-page-info');
 
     if (!listEl || !templateEl) {
         return;
     }
 
-    try {
-        const response = await fetch('/api/trains');
-        if (!response.ok) {
-            throw new Error(`Failed to load trains (${response.status})`);
-        }
+    let currentPage = 1;
+    const limit = 10;
+    let totalPages = 1;
 
-        const payload = await response.json();
-        const trains = payload.trains || [];
-        const fragment = document.createDocumentFragment();
-
-        trains.forEach((train) => {
-            const card = templateEl.content.cloneNode(true);
-            const imageEl = card.querySelector('[data-field="image"]');
-
-            imageEl.src = train.imageUrl;
-            imageEl.alt = train.imageAlt || `${train.name} train`;
-
-            card.querySelector('[data-field="name"]').textContent = train.name;
-            card.querySelector('[data-field="operator"]').textContent = train.operator;
-            card.querySelector('[data-field="type"]').textContent = train.type;
-            card.querySelector('[data-field="speed"]').textContent = `${train.maxSpeedKmh} km/h`;
-            card.querySelector('[data-field="seats"]').textContent = `${train.capacity} seats`;
-            card.querySelector('[data-field="power"]').textContent = train.powerSource;
-            card.querySelector('[data-field="description"]').textContent = train.description;
-            card.querySelector('[data-field="best-for"]').textContent = train.bestFor;
-
-            fragment.appendChild(card);
-        });
-
-        listEl.replaceChildren(fragment);
+    const loadTrains = async (page) => {
         if (loadingEl) {
-            loadingEl.hidden = true;
+            loadingEl.hidden = false;
         }
-    } catch (error) {
-        if (loadingEl) {
-            loadingEl.hidden = true;
-        }
+
         if (errorEl) {
-            errorEl.hidden = false;
-            errorEl.textContent = 'Unable to load trains right now. Please try again in a moment.';
+            errorEl.hidden = true;
         }
-    }
+
+        try {
+            const response = await fetch(
+                `/api/trains?page=${page}&limit=${limit}`
+            );
+
+            if (!response.ok) {
+                throw new Error(`Failed to load trains (${response.status})`);
+            }
+
+            const payload = await response.json();
+            const trains = payload.data || [];
+            const pagination = payload.pagination;
+
+            currentPage = pagination.page;
+            totalPages = pagination.totalPages;
+
+            const fragment = document.createDocumentFragment();
+
+            trains.forEach((train) => {
+                const card = templateEl.content.cloneNode(true);
+                const imageEl = card.querySelector('[data-field="image"]');
+
+                imageEl.src = train.imageUrl;
+                imageEl.alt = train.imageAlt || `${train.name} train`;
+
+                card.querySelector('[data-field="name"]').textContent =
+                    train.name;
+                card.querySelector('[data-field="operator"]').textContent =
+                    train.operator;
+                card.querySelector('[data-field="type"]').textContent =
+                    train.type;
+                card.querySelector('[data-field="speed"]').textContent =
+                    `${train.maxSpeedKmh} km/h`;
+                card.querySelector('[data-field="seats"]').textContent =
+                    `${train.capacity} seats`;
+                card.querySelector('[data-field="power"]').textContent =
+                    train.powerSource;
+                card.querySelector('[data-field="description"]').textContent =
+                    train.description;
+                card.querySelector('[data-field="best-for"]').textContent =
+                    train.bestFor;
+
+                fragment.appendChild(card);
+            });
+
+            listEl.replaceChildren(fragment);
+
+            if (loadingEl) {
+                loadingEl.hidden = true;
+            }
+
+            if (paginationEl) {
+                paginationEl.hidden = false;
+            }
+
+            if (pageInfoEl) {
+                pageInfoEl.textContent =
+                    `Page ${currentPage} of ${totalPages}`;
+            }
+
+            if (previousButton) {
+                previousButton.disabled = currentPage <= 1;
+            }
+
+            if (nextButton) {
+                nextButton.disabled = currentPage >= totalPages;
+            }
+        } catch (error) {
+            console.error('Error loading trains:', error);
+
+            if (loadingEl) {
+                loadingEl.hidden = true;
+            }
+
+            if (paginationEl) {
+                paginationEl.hidden = true;
+            }
+
+            if (errorEl) {
+                errorEl.hidden = false;
+                errorEl.textContent =
+                    'Unable to load trains right now. Please try again in a moment.';
+            }
+        }
+    };
+
+    previousButton?.addEventListener('click', () => {
+        if (currentPage > 1) {
+            loadTrains(currentPage - 1);
+        }
+    });
+
+    nextButton?.addEventListener('click', () => {
+        if (currentPage < totalPages) {
+            loadTrains(currentPage + 1);
+        }
+    });
+
+    await loadTrains(currentPage);
 };
 
 const hookBookingsCatalog = async () => {
