@@ -118,4 +118,129 @@ describe('GET /api/trains', () => {
       totalPages: 1
     });
   });
+
+    test('searches trains by keyword', async () => {
+    const response = await request(app)
+      .get('/api/trains?q=express');
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.length).toBeGreaterThan(0);
+
+    response.body.data.forEach((train) => {
+      const searchableText = [
+        train.name,
+        train.operator,
+        train.type,
+        train.powerSource,
+        train.bestFor,
+        train.description
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+
+      expect(searchableText).toContain('express');
+    });
+  });
+
+  test('returns an empty result when search has no matches', async () => {
+    const response = await request(app)
+      .get('/api/trains?q=does-not-exist');
+
+    expect(response.status).toBe(200);
+    expect(response.body.data).toEqual([]);
+
+    expect(response.body.pagination).toEqual({
+      page: 1,
+      limit: 10,
+      totalItems: 0,
+      totalPages: 0
+    });
+  });
+
+  test('sorts trains by name ascending', async () => {
+    const response = await request(app)
+      .get('/api/trains?sort=name&order=asc');
+
+    expect(response.status).toBe(200);
+
+    const names = response.body.data.map((train) => train.name);
+    const sortedNames = [...names].sort((a, b) => a.localeCompare(b));
+
+    expect(names).toEqual(sortedNames);
+  });
+
+  test('sorts trains by name descending', async () => {
+    const response = await request(app)
+      .get('/api/trains?sort=name&order=desc');
+
+    expect(response.status).toBe(200);
+
+    const names = response.body.data.map((train) => train.name);
+    const sortedNames = [...names].sort((a, b) => b.localeCompare(a));
+
+    expect(names).toEqual(sortedNames);
+  });
+
+  test('returns 400 for an invalid sort field', async () => {
+    const response = await request(app)
+      .get('/api/trains?sort=invalidField');
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({
+      error: 'Invalid sort field.'
+    });
+  });
+
+  test('returns 400 for an invalid sort order', async () => {
+    const response = await request(app)
+      .get('/api/trains?order=random');
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({
+      error: 'Order must be asc or desc.'
+    });
+  });
+
+  test('combines search with pagination', async () => {
+    const response = await request(app)
+      .get('/api/trains?q=express&page=1&limit=1');
+
+    expect(response.status).toBe(200);
+    expect(response.body.data).toHaveLength(1);
+    expect(response.body.pagination.page).toBe(1);
+    expect(response.body.pagination.limit).toBe(1);
+    expect(response.body.pagination.totalItems).toBeGreaterThan(0);
+  });
+
+  test('combines search, sorting, and pagination', async () => {
+    const response = await request(app)
+      .get('/api/trains?q=express&sort=name&order=asc&page=1&limit=1');
+
+    expect(response.status).toBe(200);
+    expect(response.body.data).toHaveLength(1);
+
+    expect(response.body.pagination).toEqual({
+      page: 1,
+      limit: 1,
+      totalItems: expect.any(Number),
+      totalPages: expect.any(Number)
+    });
+
+    const train = response.body.data[0];
+
+    const searchableText = [
+      train.name,
+      train.operator,
+      train.type,
+      train.powerSource,
+      train.bestFor,
+      train.description
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase();
+
+    expect(searchableText).toContain('express');
+  });
 });

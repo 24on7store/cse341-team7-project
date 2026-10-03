@@ -30,6 +30,9 @@ export async function getAllTrains(req, res) {
   try {
     const pageValue = req.query.page ?? '1';
     const limitValue = req.query.limit ?? '10';
+    const q = req.query.q?.trim() ?? '';
+    const sort = req.query.sort ?? 'id';
+    const order = req.query.order ?? 'asc';
 
     if (!/^\d+$/.test(pageValue) || !/^\d+$/.test(limitValue)) {
       return res.status(400).json({
@@ -52,9 +55,34 @@ export async function getAllTrains(req, res) {
       });
     }
 
+    const allowedSortFields = [
+      'id',
+      'name',
+      'operator',
+      'type',
+      'maxSpeedKmh',
+      'capacity',
+      'powerSource'
+    ];
+
+    if (!allowedSortFields.includes(sort)) {
+      return res.status(400).json({
+        error: 'Invalid sort field.'
+      });
+    }
+
+    if (!['asc', 'desc'].includes(order)) {
+      return res.status(400).json({
+        error: 'Order must be asc or desc.'
+      });
+    }
+
     const { data, totalItems } = await findAllTrains({
       page,
-      limit
+      limit,
+      q,
+      sort,
+      order
     });
 
     const totalPages = totalItems === 0
