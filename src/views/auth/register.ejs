@@ -1,69 +1,44 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= title %> | Kizuna Rail</title>
-</head>
-<body>
-    <main>
-        <h1>Create an Account</h1>
+<%- include('../partials/header') %>
 
-        <% if (typeof error !== 'undefined') { %>
-            <p role="alert"><%= error %></p>
-        <% } %>
+    <section class="auth-page content">
+        <header class="auth-page__header">
+            <h1>Create an Account</h1>
+            <p>Join Kizuna Rail to manage your trips and bookings.</p>
+        </header>
 
-        <form action="/auth/register" method="POST">
-            <div>
-                <label for="displayName">Display Name</label>
-                <input
-                    type="text"
-                    id="displayName"
-                    name="displayName"
-                    value="<%= formData?.displayName || '' %>"
-                    required
-                >
-            </div>
+        <% if (typeof error !=='undefined' ) { %>
+            <p class="auth-page__error" role="alert">
+                <%= error %>
+            </p>
+            <% } %>
 
-            <div>
-                <label for="username">Username</label>
-                <input
-                    type="text"
-                    id="username"
-                    name="username"
-                    value="<%= formData?.username || '' %>"
-                    required
-                >
-            </div>
+                <form class="auth-page__form" action="/auth/register" method="POST">
+                    <label class="auth-page__field" for="displayName">
+                        Display Name
+                        <input type="text" id="displayName" name="displayName"
+                            value="<%= formData?.displayName || '' %>" required>
+                    </label>
 
-            <div>
-                <label for="email">Email</label>
-                <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value="<%= formData?.email || '' %>"
-                    required
-                >
-            </div>
+                    <label class="auth-page__field" for="username">
+                        Username
+                        <input type="text" id="username" name="username" value="<%= formData?.username || '' %>"
+                            required>
+                    </label>
 
-            <div>
-                <label for="password">Password</label>
-                <input
-                    type="password"
-                    id="password"
-                    name="password"
-                    required
-                >
-            </div>
+                    <label class="auth-page__field" for="email">
+                        Email
+                        <input type="email" id="email" name="email" value="<%= formData?.email || '' %>" required>
+                    </label>
 
-            <button type="submit">Register</button>
-        </form>
+                    <label class="auth-page__field" for="password">
+                        Password
+                        <input type="password" id="password" name="password" required>
+                    </label>
 
-        <p>
-            Already have an account?
-            <a href="/auth/login">Log in</a>
-        </p>
-    </main>
-</body>
-</html>
+                    <button class="auth-page__submit" type="submit">Register</button>
+                </form>
+
+                <p class="auth-page__switch">Already have an account? <a href="/auth/login">Log in</a></p>
+    </section>
+
+    <%- include('../partials/footer') %>
