@@ -31,8 +31,75 @@ router.get('/dashboard', requirePageLogin, userDashboardPage);
 
 router.get('/admin', requirePageRole('admin'), adminDashboard);
 
+/**
+ * @swagger
+ * /api/trains:
+ *   get:
+ *     summary: Get paginated, searchable, and sortable trains
+ *     description: Returns a paginated list of trains with optional keyword search and sorting.
+ *     tags:
+ *       - Trains
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Page number.
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 50
+ *           default: 10
+ *         description: Number of trains to return per page.
+ *       - in: query
+ *         name: q
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: Keyword used to search train name, operator, type, power source, best-for text, and description.
+ *       - in: query
+ *         name: sort
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum:
+ *             - id
+ *             - name
+ *             - operator
+ *             - type
+ *             - maxSpeedKmh
+ *             - capacity
+ *             - powerSource
+ *           default: id
+ *         description: Field used to sort the results.
+ *       - in: query
+ *         name: order
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum:
+ *             - asc
+ *             - desc
+ *           default: asc
+ *         description: Sort direction.
+ *     responses:
+ *       200:
+ *         description: Paginated list of trains.
+ *       400:
+ *         description: Invalid page, limit, sort field, or sort order.
+ *       500:
+ *         description: Server error.
+ */
+
 // Trains API
 router.get('/api/trains', trainsApi);
+
 router.get('/api/trains/:id', getTrainById);
 
 // Rail trips
