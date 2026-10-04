@@ -103,6 +103,10 @@ router.get('/admin', requirePageRole('admin'), adminDashboard);
 // Trains API
 router.get('/api/trains', trainsApi);
 
+/**
+ * @swagger
+ * /api/trains:
+ *   get:
  *     summary: List trains
  *     description: Returns all trains in the catalog.
  *     tags:
