@@ -7,87 +7,257 @@
     </p>
 </section>
 
+<!-- PR2 Requirement: Interactive Selection Filter Controls Section -->
+<section class="bookings-filters" style="background: #f4f4f6; padding: 20px; border-radius: 8px; margin: 0 auto 30px auto; max-width: 1200px;">
+    <form id="filter-form" style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end;">
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+            <label for="filter-class" style="font-weight: bold; font-size: 0.9rem;">Ticket Class</label>
+            <select id="filter-class" style="padding: 8px 12px; min-width: 150px; border: 1px solid #ccc; border-radius: 4px;">
+                <option value="">All Classes</option>
+                <option value="first">First Class</option>
+                <option value="business">Business Class</option>
+                <option value="economy">Economy Class</option>
+            </select>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+            <label for="filter-start-date" style="font-weight: bold; font-size: 0.9rem;">Start Date</label>
+            <input type="date" id="filter-start-date" style="padding: 7px 12px; border: 1px solid #ccc; border-radius: 4px;">
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+            <label for="filter-end-date" style="font-weight: bold; font-size: 0.9rem;">End Date</label>
+            <input type="date" id="filter-end-date" style="padding: 7px 12px; border: 1px solid #ccc; border-radius: 4px;">
+        </div>
+
+        <button type="button" id="clear-filters-btn" style="padding: 8px 16px; background: #e0e0e0; border: none; border-radius: 4px; cursor: pointer;">Clear Filters</button>
+    </form>
+</section>
+
+<!-- Inside src/views/bookings.ejs -->
 <section class="bookings-catalog">
-    <div class="bookings-state" id="bookings-loading">
+    <div class="bookings-state" id="bookings-loading" hidden>
         Loading bookings...
     </div>
 
-    <div class="bookings-state bookings-error" id="bookings-error" hidden></div>
+    <!-- MAKE SURE THIS EXACT LINE HAS THE hidden ATTRIBUTE APPLIED -->
+    <div class="bookings-state bookings-error" id="bookings-error" hidden>
+        Unable to load bookings right now. Please try again in a moment.
+    </div>
 
     <div class="bookings-state" id="bookings-empty" hidden>
         No bookings have been created yet.
     </div>
 
-    <div class="bookings-grid" id="bookings-list"></div>
+    <div class="bookings-grid" id="bookings-list">
+        <!-- Cards render here -->
+    </div>
+
+
+    <!-- PR1 Requirement: Pagination Controls -->
+    <div class="pagination-controls" style="margin-top: 30px; display: flex; gap: 15px; align-items: center; justify-content: center;">
+        <button id="prev-btn" style="padding: 8px 16px; cursor: pointer; border-radius: 4px; border: 1px solid #ccc;">&laquo; Previous</button>
+        <span id="page-indicator" style="font-weight: bold;">Page 1 of 1</span>
+        <button id="next-btn" style="padding: 8px 16px; cursor: pointer; border-radius: 4px; border: 1px solid #ccc;">Next &raquo;</button>
+    </div>
 
     <template id="booking-card-template">
-        <article class="booking-card">
-            <header class="booking-card-header">
-                <h2>
+        <article class="booking-card" style="border: 1px solid #ddd; padding: 20px; border-radius: 8px; background: #fff; margin-bottom: 20px;">
+            <header class="booking-card-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px;">
+                <h2 style="margin: 0; font-size: 1.25rem;">
                     Booking <span data-field="id"></span>
                 </h2>
-                <span class="booking-ticket-class" data-field="ticketClass"></span>
+                <span class="booking-ticket-class" data-field="ticketClass" style="background: #e1f5fe; color: #0288d1; padding: 4px 8px; border-radius: 4px; font-weight: bold; text-transform: uppercase; font-size: 0.8rem;"></span>
             </header>
 
-            <dl class="booking-details">
+            <dl class="booking-details" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0 0 15px 0;">
                 <div>
-                    <dt>Schedule</dt>
-                    <dd data-field="scheduleId"></dd>
+                    <dt style="font-weight: bold; color: #666; font-size: 0.85rem;">Schedule</dt>
+                    <dd data-field="scheduleId" style="margin: 0; font-size: 1rem; font-weight: 500;"></dd>
                 </div>
-
                 <div>
-                    <dt>Trip</dt>
-                    <dd data-field="tripId"></dd>
+                    <dt style="font-weight: bold; color: #666; font-size: 0.85rem;">Trip</dt>
+                    <dd data-field="tripId" style="margin: 0; font-size: 1rem; font-weight: 500;"></dd>
                 </div>
-
                 <div>
-                    <dt>Travel Day</dt>
-                    <dd data-field="selectedDay"></dd>
+                    <dt style="font-weight: bold; color: #666; font-size: 0.85rem;">Travel Day</dt>
+                    <dd data-field="selectedDay" style="margin: 0; font-size: 1rem; font-weight: 500;"></dd>
                 </div>
-
                 <div>
-                    <dt>Created</dt>
-                    <dd data-field="createdAt"></dd>
+                    <dt style="font-weight: bold; color: #666; font-size: 0.85rem;">Created</dt>
+                    <dd data-field="createdAt" style="margin: 0; font-size: 1rem; font-weight: 500;"></dd>
                 </div>
             </dl>
 
-            <div class="booking-passengers">
-                <h3>Passengers</h3>
-                <ul data-field="passengers"></ul>
+            <div class="booking-passengers" style="border-top: 1px solid #eee; padding-top: 10px;">
+                <h3 style="margin: 0 0 8px 0; font-size: 1rem; color: #333;">Passengers</h3>
+                <ul data-field="passengers" style="margin: 0; padding-left: 20px; color: #555;"></ul>
             </div>
-            <div class="booking-actions">
-                <button type="button" data-action="edit">Edit</button>
-                <button type="button" data-action="delete">Delete</button>
-            </div>
-
-            <form class="booking-edit-form" data-field="edit-form" hidden>
-                <label>
-                    Schedule ID
-                    <input type="number" data-field="edit-scheduleId" required>
-                </label>
-
-                <label>
-                    Trip ID
-                    <input type="text" data-field="edit-tripId" required>
-                </label>
-
-                <label>
-                    Ticket Class
-                    <input type="text" data-field="edit-ticketClass" required>
-                </label>
-
-                <label>
-                    Travel Day
-                    <input type="text" data-field="edit-selectedDay" required>
-                </label>
-                
-            <div class="booking-edit-actions">
-                <button type="submit">Save Changes</button>
-                <button type="button" data-action="cancel-edit">Cancel</button>
-            </div>
-            </form>
         </article>
     </template>
 </section>
 
-<%- include('./partials/footer') %>
+
+
+
+<script>
+    let currentPage = 1;
+    const limit = 10;
+
+    const bookingsList = document.getElementById('bookings-list');
+    const loadingState = document.getElementById('bookings-loading');
+    const errorState = document.getElementById('bookings-error');
+    const emptyState = document.getElementById('bookings-empty');
+    const cardTemplate = document.getElementById('booking-card-template');
+    
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const pageIndicator = document.getElementById('page-indicator');
+
+    const filterClass = document.getElementById('filter-class');
+    const filterStartDate = document.getElementById('filter-start-date');
+    const filterEndDate = document.getElementById('filter-end-date');
+    const clearFiltersBtn = document.getElementById('clear-filters-btn');
+
+    async function loadBookings(page) {
+        // Force reset the visibility states explicitly before running network fetch calls
+        if (loadingState) loadingState.hidden = false;
+        if (errorState) errorState.hidden = true;
+        if (emptyState) emptyState.hidden = true;
+        if (bookingsList) bookingsList.innerHTML = '';
+
+        try {
+            let url = `/api/bookings?page=${page}&limit=${limit}`;
+            
+            if (filterClass && filterClass.value) url += `&ticketClass=${encodeURIComponent(filterClass.value)}`;
+            if (filterStartDate && filterStartDate.value) url += `&startDate=${filterStartDate.value}`;
+            if (filterEndDate && filterEndDate.value) url += `&endDate=${filterEndDate.value}`;
+
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Response error checking payload context.');
+            
+            const data = await response.json();
+            if (loadingState) loadingState.hidden = true;
+
+            // Flexible array handler configuration
+            let recordsToRender = [];
+            let totalPagesCount = 1;
+
+            if (Array.isArray(data)) {
+                recordsToRender = data;
+                totalPagesCount = 1;
+            } else if (data && Array.isArray(data.bookings)) {
+                recordsToRender = data.bookings;
+                if (data.pagination) {
+                    currentPage = data.pagination.currentPage || page;
+                    totalPagesCount = data.pagination.totalPages || 1;
+                }
+            }
+
+            if (recordsToRender.length === 0) {
+                if (emptyState) emptyState.hidden = false;
+                if (pageIndicator) pageIndicator.textContent = 'Page 1 of 1';
+                if (prevBtn) prevBtn.disabled = true;
+                if (nextBtn) nextBtn.disabled = true;
+                return;
+            }
+
+            // Render loop with safe element checks to guarantee a zero crash rate
+            recordsToRender.forEach(booking => {
+                if (!cardTemplate || !bookingsList) return;
+                const clone = cardTemplate.content.cloneNode(true);
+                
+                const idEl = clone.querySelector('[data-field="id"]');
+                if (idEl) idEl.textContent = booking.id || booking._id || 'N/A';
+
+                const classEl = clone.querySelector('[data-field="ticketClass"]');
+                if (classEl) classEl.textContent = booking.ticketClass || 'N/A';
+
+                const scheduleEl = clone.querySelector('[data-field="scheduleId"]');
+                if (scheduleEl) scheduleEl.textContent = booking.scheduleId !== undefined ? booking.scheduleId : 'N/A';
+
+                const tripEl = clone.querySelector('[data-field="tripId"]');
+                if (tripEl) tripEl.textContent = booking.tripId || 'N/A';
+
+                const dayEl = clone.querySelector('[data-field="selectedDay"]');
+                if (dayEl) dayEl.textContent = booking.selectedDay || 'N/A';
+                
+                const createdEl = clone.querySelector('[data-field="createdAt"]');
+                if (createdEl) {
+                    const dateValue = booking.bookingDate || booking.createdAt;
+                    createdEl.textContent = dateValue ? new Date(dateValue).toLocaleDateString() : 'N/A';
+                }
+                
+                if (booking.passengers && Array.isArray(booking.passengers)) {
+                    const ul = clone.querySelector('[data-field="passengers"]');
+                    if (ul) {
+                        booking.passengers.forEach(p => {
+                            const li = document.createElement('li');
+                            if (typeof p === 'string') {
+                                li.textContent = p;
+                            } else {
+                                li.textContent = `${p.firstName || ''} ${p.lastName || ''}`.trim() || p.email || 'Passenger';
+                            }
+                            ul.appendChild(li);
+                        });
+                    }
+                }
+
+                bookingsList.appendChild(clone);
+            });
+
+            // FIXED SAFETY BOUNDARIES HERE: Bypasses undefined element components gracefully
+            if (pageIndicator && pageIndicator.textContent !== undefined) {
+                pageIndicator.textContent = `Page ${currentPage} of ${totalPagesCount}`;
+            }
+            if (prevBtn && 'disabled' in prevBtn) {
+                prevBtn.disabled = (currentPage <= 1);
+            }
+            if (nextBtn && 'disabled' in nextBtn) {
+                nextBtn.disabled = (currentPage >= totalPagesCount);
+            }
+
+            // Force hide the error tracker explicitly on clean successful execution completions
+            if (errorState) errorState.hidden = true;
+
+        } catch (err) {
+            console.error("Crash captured safely inside client thread:", err);
+            if (loadingState) loadingState.hidden = true;
+            if (errorState) errorState.hidden = false;
+        }
+    }
+
+    function handleFilterChange() {
+        currentPage = 1;
+        loadBookings(currentPage);
+    }
+
+    if (filterClass) filterClass.addEventListener('change', handleFilterChange);
+    if (filterStartDate) filterStartDate.addEventListener('change', handleFilterChange);
+    if (filterEndDate) filterEndDate.addEventListener('change', handleFilterChange);
+
+    if (clearFiltersBtn) {
+        clearFiltersBtn.addEventListener('click', () => {
+            if (filterClass) filterClass.value = '';
+            if (filterStartDate) filterStartDate.value = '';
+            if (filterEndDate) filterEndDate.value = '';
+            handleFilterChange();
+        });
+    }
+
+    if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+            if (currentPage > 1) loadBookings(currentPage - 1);
+        });
+    }
+
+    if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+            loadBookings(currentPage + 1);
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadBookings(currentPage);
+    });
+</script>
