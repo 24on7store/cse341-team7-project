@@ -111,7 +111,7 @@ export async function confirmationPage(req, res) {
     }
 }
 
-//API: GET/api/bookings
+//API: GET/api/Allbookings
 //Enhanced to serve Pull Request 1 (Pagination) & Pull Request 2 (Filtering)
 export async function getAllBookings(req, res) {
     try {
