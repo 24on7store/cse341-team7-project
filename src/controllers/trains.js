@@ -28,14 +28,81 @@ export async function getTrainById(req, res) {
 
 export async function getAllTrains(req, res) {
   try {
-    const trains = await findAllTrains();
+    const pageValue = req.query.page ?? '1';
+    const limitValue = req.query.limit ?? '10';
+    const q = req.query.q?.trim() ?? '';
+    const sort = req.query.sort ?? 'id';
+    const order = req.query.order ?? 'asc';
 
-    return res.status(200).json(trains);
+    if (!/^\d+$/.test(pageValue) || !/^\d+$/.test(limitValue)) {
+      return res.status(400).json({
+        error: 'Page and limit must be positive integers.'
+      });
+    }
+
+    const page = Number(pageValue);
+    const limit = Number(limitValue);
+
+    if (page < 1 || limit < 1) {
+      return res.status(400).json({
+        error: 'Page and limit must be positive integers.'
+      });
+    }
+
+    if (limit > 50) {
+      return res.status(400).json({
+        error: 'Limit cannot exceed 50.'
+      });
+    }
+
+    const allowedSortFields = [
+      'id',
+      'name',
+      'operator',
+      'type',
+      'maxSpeedKmh',
+      'capacity',
+      'powerSource'
+    ];
+
+    if (!allowedSortFields.includes(sort)) {
+      return res.status(400).json({
+        error: 'Invalid sort field.'
+      });
+    }
+
+    if (!['asc', 'desc'].includes(order)) {
+      return res.status(400).json({
+        error: 'Order must be asc or desc.'
+      });
+    }
+
+    const { data, totalItems } = await findAllTrains({
+      page,
+      limit,
+      q,
+      sort,
+      order
+    });
+
+    const totalPages = totalItems === 0
+      ? 0
+      : Math.ceil(totalItems / limit);
+
+    return res.status(200).json({
+      data,
+      pagination: {
+        page,
+        limit,
+        totalItems,
+        totalPages
+      }
+    });
   } catch (error) {
-    console.error("Error fetching trains:", error);
+    console.error('Error fetching trains:', error);
 
     return res.status(500).json({
-      error: "Failed to fetch trains",
+      error: 'Failed to fetch trains'
     });
   }
 }
