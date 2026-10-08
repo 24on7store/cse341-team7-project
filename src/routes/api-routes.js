@@ -69,7 +69,15 @@ router.delete('/api/bookings/:id', requireApiLogin, deleteBooking);
 
 //Added on week03 by Mackison
 // ... KEEP EXISTING BOOKINGS/SCHEDULES ROUTER IMPORTS ...
-import { getAllTrips, getTripById } from '../controllers/trips.js';
+import {
+  getAllTrips,
+  getTripById,
+  createTrip,
+  updateTrip,
+  deleteTrip
+} from '../controllers/trips.js';
+
+import { requireApiRole } from '../middleware/auth.js';
 
 // ... KEEP EXISTING BOOKINGS/SCHEDULES ROUTES ...
 
@@ -88,6 +96,14 @@ import { getAllTrips, getTripById } from '../controllers/trips.js';
  *         description: Server error.
  */
 router.get('/api/trips', getAllTrips);
+
+router.get('/api/trips/:id', getTripById);
+
+router.post('/api/trips', requireApiRole('admin'), createTrip);
+
+router.put('/api/trips/:id', requireApiRole('admin'), updateTrip);
+
+router.delete('/api/trips/:id', requireApiRole('admin'), deleteTrip);
 
 /**
  * @swagger
@@ -113,8 +129,6 @@ router.get('/api/trips', getAllTrips);
  *         description: Server error.
  */
 router.get('/api/trips/:id', getTripById);
-
-
 
 router.get('/api/trips/:id/schedules', (req, res) => {
   if (req.query.month !== undefined && req.query.month !== '') {

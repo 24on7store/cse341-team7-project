@@ -7,6 +7,7 @@ import {
   getTripById as findTripById,
   getAllTrips as findAllTrips,
 } from "../models/trips.js";
+import { getDb } from "../db/connect.js";
 
 //Added on week03 by Mackison
 // export async function getTripById(req, res) { ... }
@@ -54,8 +55,92 @@ export async function getAllTrips(req, res) {
   }
 }
 
+export async function createTrip(req, res) {
+  try {
+    const db = getDb();
+    const trip = req.body;
 
+    if (!trip.id || !trip.name || !trip.duration) {
+      return res.status(400).json({
+        error: "id, name, and duration are required"
+      });
+    }
 
+    const existingTrip = await db.collection("trips").findOne({
+      id: trip.id
+    });
+
+    if (existingTrip) {
+      return res.status(409).json({
+        error: "A trip with this id already exists"
+      });
+    }
+
+    await db.collection("trips").insertOne(trip);
+
+    return res.status(201).json(trip);
+  } catch (error) {
+    console.error("Error creating trip:", error);
+    return res.status(500).json({
+      error: "Failed to create trip"
+    });
+  }
+}
+
+export async function updateTrip(req, res) {
+  try {
+    const db = getDb();
+    const { id } = req.params;
+    const updates = { ...req.body };
+
+    delete updates._id;
+    delete updates.id;
+
+    const result = await db.collection("trips").updateOne(
+      { id },
+      { $set: updates }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({
+        error: "Trip not found"
+      });
+    }
+
+    const updatedTrip = await db.collection("trips").findOne({ id });
+
+    return res.status(200).json(updatedTrip);
+  } catch (error) {
+    console.error("Error updating trip:", error);
+    return res.status(500).json({
+      error: "Failed to update trip"
+    });
+  }
+}
+
+export async function deleteTrip(req, res) {
+  try {
+    const db = getDb();
+    const { id } = req.params;
+
+    const result = await db.collection("trips").deleteOne({ id });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({
+        error: "Trip not found"
+      });
+    }
+
+    return res.status(200).json({
+      message: "Trip deleted successfully"
+    });
+  } catch (error) {
+    console.error("Error deleting trip:", error);
+    return res.status(500).json({
+      error: "Failed to delete trip"
+    });
+  }
+}
 
     // return res.render('trips/details', {
     //   title: 'Trip Details',
