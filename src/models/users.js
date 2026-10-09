@@ -65,7 +65,7 @@ export async function getUsersPage({ page, limit, query, roleId }) {
 
 export async function updateUser(id, userData) {
   return User.findByIdAndUpdate(id, userData, {
-    new: true,
+    returnDocument: 'after',
     runValidators: true
   })
     .select('-passwordHash')
