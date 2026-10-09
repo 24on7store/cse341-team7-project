@@ -24,20 +24,61 @@ const router = Router();
  * /api/users:
  *   get:
  *     summary: List users available to the signed-in user
- *     description: Admins receive all users. Other authenticated users receive only their own sanitized profile.
+ *     description: Admins receive a paginated, searchable, and role-filterable user list. Other authenticated users receive only their own sanitized profile.
  *     tags:
  *       - Users
  *     security:
  *       - cookieAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 50
+ *           default: 10
+ *       - in: query
+ *         name: role
+ *         schema:
+ *           type: string
+ *           enum: [user, admin]
+ *       - in: query
+ *         name: q
+ *         schema:
+ *           type: string
+ *         description: Case-insensitive search across display name, username, and email.
  *     responses:
  *       200:
- *         description: A list of users without password hashes.
+ *         description: A paginated list of users without password hashes.
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/User'
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/User'
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     page: { type: integer }
+ *                     limit: { type: integer }
+ *                     totalItems: { type: integer }
+ *                     totalPages: { type: integer }
+ *                 query:
+ *                   type: object
+ *                   properties:
+ *                     q: { type: string }
+ *                     role: { type: string }
+ *       400:
+ *         description: Invalid pagination or role query value.
  *       401:
  *         description: Authentication is required or the session user no longer exists.
  *       500:

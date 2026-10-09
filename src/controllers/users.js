@@ -1,9 +1,9 @@
 import mongoose from 'mongoose';
 import {
     deleteUser as deleteUserModel,
-    getAllUsers,
     getRoleByName,
     getUserById,
+    getUsersPage,
     updateUser as updateUserModel
 } from '../models/users.js';
 
@@ -18,6 +18,27 @@ const isValidProfile = ({ displayName, username, email }) =>
 const isBadUserInput = (error) =>
     error?.code === 11000 || error?.name === 'ValidationError';
 
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const parseQuery = (query) => {
+    const page = query.page === undefined ? 1 : Number(query.page);
+    const limit = query.limit === undefined ? 10 : Number(query.limit);
+    const role = query.role === undefined ? '' : query.role.trim().toLowerCase();
+    const search = query.q === undefined ? '' : query.q.trim();
+
+    if (!Number.isInteger(page) || page < 1) {
+        return { error: 'Page must be a positive integer.' };
+    }
+    if (!Number.isInteger(limit) || limit < 1 || limit > 50) {
+        return { error: 'Limit must be an integer between 1 and 50.' };
+    }
+    if (role && !['user', 'admin'].includes(role)) {
+        return { error: 'Role must be user or admin.' };
+    }
+
+    return { page, limit, role, search };
+};
+
 export function usersAdminPage(req, res) {
     return res.render('users', {
         title: 'User Administration'
@@ -26,15 +47,51 @@ export function usersAdminPage(req, res) {
 
 export async function getUsers(req, res) {
     try {
-        const users = req.user.role === 'admin'
-            ? await getAllUsers()
-            : await getUserById(req.user.id);
-
-        if (req.user.role !== 'admin' && !users) {
-            return res.status(401).json({ error: 'Your session has expired. Please log in again.' });
+        const parsedQuery = parseQuery(req.query);
+        if (parsedQuery.error) {
+            return res.status(400).json({ error: parsedQuery.error });
         }
 
-        return res.status(200).json(req.user.role === 'admin' ? users : [users]);
+        const { page, limit, role, search } = parsedQuery;
+        if (req.user.role !== 'admin') {
+            const user = await getUserById(req.user.id);
+
+            if (!user) {
+                return res.status(401).json({ error: 'Your session has expired. Please log in again.' });
+            }
+
+            return res.status(200).json({
+                data: [user],
+                pagination: { page: 1, limit: 1, totalItems: 1, totalPages: 1 },
+                query: { q: '', role: '' }
+            });
+        }
+
+        const roleDocument = role ? await getRoleByName(role) : null;
+        if (role && !roleDocument) {
+            return res.status(200).json({
+                data: [],
+                pagination: { page, limit, totalItems: 0, totalPages: 0 },
+                query: { q: search, role }
+            });
+        }
+        const { users, totalItems } = await getUsersPage({
+            page,
+            limit,
+            query: escapeRegex(search),
+            roleId: roleDocument?._id
+        });
+
+        return res.status(200).json({
+            data: users,
+            pagination: {
+                page,
+                limit,
+                totalItems,
+                totalPages: Math.ceil(totalItems / limit)
+            },
+            query: { q: search, role }
+        });
     } catch (error) {
         console.error('Error fetching users:', error);
         return res.status(500).json({ error: 'Failed to fetch users' });

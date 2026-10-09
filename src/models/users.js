@@ -33,6 +33,36 @@ export async function getAllUsers() {
     .lean();
 }
 
+export async function getUsersPage({ page, limit, query, roleId }) {
+  const filter = {};
+
+  if (query) {
+    const search = new RegExp(query, 'i');
+    filter.$or = [
+      { displayName: search },
+      { username: search },
+      { email: search }
+    ];
+  }
+
+  if (roleId) {
+    filter.role = roleId;
+  }
+
+  const [users, totalItems] = await Promise.all([
+    User.find(filter)
+      .select('-passwordHash')
+      .populate('role')
+      .sort({ username: 1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean(),
+    User.countDocuments(filter)
+  ]);
+
+  return { users, totalItems };
+}
+
 export async function updateUser(id, userData) {
   return User.findByIdAndUpdate(id, userData, {
     new: true,

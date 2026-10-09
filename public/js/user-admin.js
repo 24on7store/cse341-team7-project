@@ -3,6 +3,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const list = document.querySelector('#user-list');
     const status = document.querySelector('#user-admin-status');
     const isAdmin = page.dataset.isAdmin === 'true';
+    let currentPage = 1;
+    const limit = 10;
 
     const setStatus = (message, isError = false) => {
         status.textContent = message;
@@ -72,21 +74,40 @@ document.addEventListener('DOMContentLoaded', async () => {
         return form;
     };
 
-    const renderUsers = (users) => {
+    const renderUsers = ({ data: users, pagination }) => {
         list.replaceChildren();
         if (users.length === 0) {
             setStatus('No users found.');
-            return;
+        } else {
+            const fragment = document.createDocumentFragment();
+            users.forEach((user) => fragment.append(createUserForm(user)));
+            list.append(fragment);
+            setStatus(`${pagination.totalItems} user${pagination.totalItems === 1 ? '' : 's'} found.`);
         }
 
-        const fragment = document.createDocumentFragment();
-        users.forEach((user) => fragment.append(createUserForm(user)));
-        list.append(fragment);
-        setStatus(`${users.length} user${users.length === 1 ? '' : 's'} loaded.`);
+        const paginationControls = document.querySelector('.user-admin__pagination');
+        if (paginationControls) {
+            paginationControls.querySelector('.user-admin__page').textContent =
+                `Page ${pagination.page} of ${Math.max(pagination.totalPages, 1)}`;
+            paginationControls.querySelector('[data-page="previous"]').disabled =
+                pagination.page <= 1;
+            paginationControls.querySelector('[data-page="next"]').disabled =
+                pagination.page >= pagination.totalPages;
+        }
     };
 
     const loadUsers = async () => {
-        const response = await fetch('/api/users');
+        const params = new URLSearchParams();
+        if (isAdmin) {
+            params.set('page', currentPage);
+            params.set('limit', limit);
+            const role = document.querySelector('#user-role-filter').value;
+            const search = document.querySelector('#user-search').value.trim();
+            if (role) params.set('role', role);
+            if (search) params.set('q', search);
+        }
+
+        const response = await fetch(`/api/users?${params}`);
         if (response.status === 401) {
             window.location.href = '/auth/login';
             return;
@@ -133,6 +154,46 @@ document.addEventListener('DOMContentLoaded', async () => {
         roles.append(option);
     });
     document.body.append(roles);
+
+    if (isAdmin) {
+        const controls = document.createElement('div');
+        controls.className = 'user-admin__controls';
+        controls.innerHTML = `
+            <label>Search users
+                <input id="user-search" type="search" placeholder="Name, username, or email">
+            </label>
+            <label>Role
+                <select id="user-role-filter">
+                    <option value="">All roles</option>
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </label>
+            <button type="button" data-action="search">Apply filters</button>
+        `;
+        page.insertBefore(controls, status);
+
+        const pagination = document.createElement('nav');
+        pagination.className = 'user-admin__pagination';
+        pagination.innerHTML = `
+            <button type="button" data-page="previous">Previous</button>
+            <span class="user-admin__page"></span>
+            <button type="button" data-page="next">Next</button>
+        `;
+        page.append(pagination);
+        controls.querySelector('[data-action="search"]').addEventListener('click', async () => {
+            currentPage = 1;
+            await loadUsers();
+        });
+        pagination.querySelector('[data-page="previous"]').addEventListener('click', async () => {
+            currentPage -= 1;
+            await loadUsers();
+        });
+        pagination.querySelector('[data-page="next"]').addEventListener('click', async () => {
+            currentPage += 1;
+            await loadUsers();
+        });
+    }
 
     try {
         await loadUsers();
