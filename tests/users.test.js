@@ -49,6 +49,12 @@ describe('Protected user administration', () => {
         expect(listResponse.body.data).toHaveLength(2);
         expect(listResponse.body.data.every((user) => !user.passwordHash)).toBe(true);
 
+        const rolesResponse = await adminAgent.get('/api/roles');
+        expect(rolesResponse.status).toBe(200);
+        expect(rolesResponse.body.map((role) => role.name)).toEqual(
+            expect.arrayContaining(['admin', 'user'])
+        );
+
         const target = listResponse.body.data.find((user) => user.username === userDetails.username);
         const updateResponse = await adminAgent
             .put(`/api/users/${target._id}`)

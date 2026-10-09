@@ -127,7 +127,7 @@ export async function updateUser(req, res) {
         if (req.user.role === 'admin' && req.body.role !== undefined) {
             const role = await getRoleByName(req.body.role);
             if (!role) {
-                return res.status(400).json({ error: 'Role must be user or admin.' });
+                return res.status(400).json({ error: 'Role must be one of the available database roles.' });
             }
             userData.role = role._id;
         }
