@@ -81,6 +81,10 @@ export async function getRoleByName(name) {
   return Role.findOne({ name }).lean();
 }
 
+export async function getAllRoles() {
+  return Role.find({}).select('name -_id').sort({ name: 1 }).lean();
+}
+
 
 
 export async function findUserByEmail(email) {

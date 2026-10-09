@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import {
     deleteUser as deleteUserModel,
+    getAllRoles,
     getRoleByName,
     getUserById,
     getUsersPage,
@@ -32,10 +33,6 @@ const parseQuery = (query) => {
     if (!Number.isInteger(limit) || limit < 1 || limit > 50) {
         return { error: 'Limit must be an integer between 1 and 50.' };
     }
-    if (role && !['user', 'admin'].includes(role)) {
-        return { error: 'Role must be user or admin.' };
-    }
-
     return { page, limit, role, search };
 };
 
@@ -69,11 +66,7 @@ export async function getUsers(req, res) {
 
         const roleDocument = role ? await getRoleByName(role) : null;
         if (role && !roleDocument) {
-            return res.status(200).json({
-                data: [],
-                pagination: { page, limit, totalItems: 0, totalPages: 0 },
-                query: { q: search, role }
-            });
+            return res.status(400).json({ error: 'Role does not exist.' });
         }
         const { users, totalItems } = await getUsersPage({
             page,
@@ -95,6 +88,15 @@ export async function getUsers(req, res) {
     } catch (error) {
         console.error('Error fetching users:', error);
         return res.status(500).json({ error: 'Failed to fetch users' });
+    }
+}
+
+export async function getRoles(req, res) {
+    try {
+        return res.status(200).json(await getAllRoles());
+    } catch (error) {
+        console.error('Error fetching roles:', error);
+        return res.status(500).json({ error: 'Failed to fetch roles' });
     }
 }
 

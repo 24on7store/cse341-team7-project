@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const isAdmin = page.dataset.isAdmin === 'true';
     let currentPage = 1;
     const limit = 10;
+    let roleNames = [];
 
     const setStatus = (message, isError = false) => {
         status.textContent = message;
@@ -148,7 +149,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const roles = document.createElement('datalist');
     roles.id = 'user-roles';
-    ['user', 'admin'].forEach((role) => {
+    const populateRoleOptions = (select) => {
+        roleNames.forEach((role) => {
+            const option = document.createElement('option');
+            option.value = role;
+            select.append(option);
+        });
+    };
+    roleNames.forEach((role) => {
         const option = document.createElement('option');
         option.value = role;
         roles.append(option);
@@ -165,13 +173,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             <label>Role
                 <select id="user-role-filter">
                     <option value="">All roles</option>
-                    <option value="user">User</option>
-                    <option value="admin">Admin</option>
-                </select>
+                    </select>
             </label>
             <button type="button" data-action="search">Apply filters</button>
         `;
         page.insertBefore(controls, status);
+        const roleFilter = controls.querySelector('#user-role-filter');
+        populateRoleOptions(roleFilter);
 
         const pagination = document.createElement('nav');
         pagination.className = 'user-admin__pagination';
@@ -196,6 +204,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     try {
+        if (isAdmin) {
+            const rolesResponse = await fetch('/api/roles');
+            if (!rolesResponse.ok) {
+                throw new Error(`Unable to load roles (${rolesResponse.status}).`);
+            }
+            roleNames = (await rolesResponse.json()).map((role) => role.name);
+            const roleFilter = document.querySelector('#user-role-filter');
+            roleFilter.replaceChildren(new Option('All roles', ''));
+            populateRoleOptions(roleFilter);
+            roles.replaceChildren();
+            roleNames.forEach((role) => {
+                roles.append(new Option(role, role));
+            });
+        }
         await loadUsers();
     } catch (error) {
         console.error(error);

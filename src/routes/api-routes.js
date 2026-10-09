@@ -11,6 +11,7 @@ import {
 } from '../controllers/schedules.js';
 import {
   deleteUser,
+  getRoles,
   getUsers,
   updateUser
 } from '../controllers/users.js';
@@ -85,6 +86,35 @@ const router = Router();
  *         description: Server error.
  */
 router.get('/api/users', requireApiLogin, getUsers);
+
+/**
+ * @swagger
+ * /api/roles:
+ *   get:
+ *     summary: List available user roles
+ *     description: Returns role names from the database for authenticated user administration clients.
+ *     tags:
+ *       - Users
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Available roles.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   name:
+ *                     type: string
+ *       401:
+ *         description: Authentication is required.
+ *       500:
+ *         description: Server error.
+ */
+router.get('/api/roles', requireApiLogin, getRoles);
 
 /**
  * @swagger
