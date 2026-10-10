@@ -3,6 +3,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const list = document.querySelector('#user-list');
     const status = document.querySelector('#user-admin-status');
     const isAdmin = page.dataset.isAdmin === 'true';
+    let currentPage = 1;
+    const limit = 10;
 
     const setStatus = (message, isError = false) => {
         status.textContent = message;
@@ -72,7 +74,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         return form;
     };
 
-    const renderUsers = (users) => {
+    const renderUsers = (result) => {
+        if (!result || !Array.isArray(result.data) || !result.pagination) {
+            throw new Error('The user API returned an invalid response. Restart the server on the pagination branch.');
+        }
+
+        const { data: users, pagination } = result;
         list.replaceChildren();
         if (users.length === 0) {
             setStatus('No users found.');
@@ -82,11 +89,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         const fragment = document.createDocumentFragment();
         users.forEach((user) => fragment.append(createUserForm(user)));
         list.append(fragment);
-        setStatus(`${users.length} user${users.length === 1 ? '' : 's'} loaded.`);
+        setStatus(`${pagination.totalItems} user${pagination.totalItems === 1 ? '' : 's'} found.`);
+        const paginationControls = document.querySelector('.user-admin__pagination');
+        if (paginationControls) {
+            paginationControls.querySelector('.user-admin__page').textContent =
+                `Page ${pagination.page} of ${Math.max(pagination.totalPages, 1)}`;
+            paginationControls.querySelector('[data-page="previous"]').disabled =
+                pagination.page <= 1;
+            paginationControls.querySelector('[data-page="next"]').disabled =
+                pagination.page >= pagination.totalPages;
+        }
     };
 
     const loadUsers = async () => {
-        const response = await fetch('/api/users');
+        setStatus('Loading users...');
+        const response = await fetch(`/api/users?page=${currentPage}&limit=${limit}`);
         if (response.status === 401) {
             window.location.href = '/auth/login';
             return;
@@ -133,6 +150,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         roles.append(option);
     });
     document.body.append(roles);
+
+    const pagination = document.createElement('nav');
+    pagination.className = 'user-admin__pagination';
+    pagination.innerHTML = `
+        <button type="button" data-page="previous">Previous</button>
+        <span class="user-admin__page"></span>
+        <button type="button" data-page="next">Next</button>
+    `;
+    page.append(pagination);
+    pagination.querySelector('[data-page="previous"]').addEventListener('click', async () => {
+        currentPage -= 1;
+        await loadUsers();
+    });
+    pagination.querySelector('[data-page="next"]').addEventListener('click', async () => {
+        currentPage += 1;
+        await loadUsers();
+    });
 
     try {
         await loadUsers();

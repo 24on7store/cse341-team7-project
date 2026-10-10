@@ -33,9 +33,24 @@ export async function getAllUsers() {
     .lean();
 }
 
+export async function getUsersPage({ page, limit }) {
+  const [users, totalItems] = await Promise.all([
+    User.find({})
+      .select('-passwordHash')
+      .populate('role')
+      .sort({ username: 1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean(),
+    User.countDocuments({})
+  ]);
+
+  return { users, totalItems };
+}
+
 export async function updateUser(id, userData) {
   return User.findByIdAndUpdate(id, userData, {
-    new: true,
+    returnDocument: 'after',
     runValidators: true
   })
     .select('-passwordHash')
