@@ -135,4 +135,23 @@ describe('Protected user administration', () => {
         const invalidResponse = await adminAgent.get('/api/users?page=0&limit=51');
         expect(invalidResponse.status).toBe(400);
     });
+
+    test('filters users by database role and keyword', async () => {
+        await registerUser();
+        const adminAgent = request.agent(app);
+        await login(adminAgent, adminCredentials);
+
+        const rolesResponse = await adminAgent.get('/api/roles');
+        expect(rolesResponse.status).toBe(200);
+        expect(rolesResponse.body.map((role) => role.name)).toEqual(
+            expect.arrayContaining(['admin', 'user'])
+        );
+
+        const filtered = await adminAgent
+            .get('/api/users?page=1&limit=10&q=TEST&role=user');
+        expect(filtered.status).toBe(200);
+        expect(filtered.body.data).toHaveLength(1);
+        expect(filtered.body.data[0].username).toBe(userDetails.username);
+        expect(filtered.body.query).toEqual({ q: 'TEST', role: 'user' });
+    });
 });

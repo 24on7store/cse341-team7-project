@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const isAdmin = page.dataset.isAdmin === 'true';
     let currentPage = 1;
     const limit = 10;
+    let roleNames = [];
 
     const setStatus = (message, isError = false) => {
         status.textContent = message;
@@ -28,6 +29,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         return label;
     };
 
+    const createRoleSelect = (value) => {
+        const label = document.createElement('label');
+        label.className = 'user-admin__field';
+        label.textContent = 'Role';
+        const select = document.createElement('select');
+        select.name = 'role';
+        select.required = true;
+        roleNames.forEach((role) => {
+            select.append(new Option(role, role, false, role === value));
+        });
+        label.append(select);
+        return label;
+    };
+
     const createUserForm = (user) => {
         const form = document.createElement('form');
         form.className = 'user-admin__card';
@@ -37,9 +52,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         form.append(createInput('Email', user.email, 'email', 'email'));
 
         if (isAdmin) {
-            const roleLabel = createInput('Role', getRoleName(user), 'role');
-            roleLabel.querySelector('input').setAttribute('list', 'user-roles');
-            form.append(roleLabel);
+            form.append(createRoleSelect(getRoleName(user)));
         }
 
         const actions = document.createElement('div');
@@ -98,7 +111,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const loadUsers = async () => {
         setStatus('Loading users...');
-        const response = await fetch(`/api/users?page=${currentPage}&limit=${limit}`);
+        const params = new URLSearchParams({
+            page: currentPage,
+            limit
+        });
+        if (isAdmin) {
+            const role = document.querySelector('#user-role-filter').value;
+            const search = document.querySelector('#user-search').value.trim();
+            if (role) params.set('role', role);
+            if (search) params.set('q', search);
+        }
+        const response = await fetch(`/api/users?${params}`);
         if (response.status === 401) {
             window.location.href = '/auth/login';
             return;
@@ -137,14 +160,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         await loadUsers();
     };
 
-    const roles = document.createElement('datalist');
-    roles.id = 'user-roles';
-    ['user', 'admin'].forEach((role) => {
-        const option = document.createElement('option');
-        option.value = role;
-        roles.append(option);
-    });
-    document.body.append(roles);
+    const populateRoleOptions = (select) => {
+        select.replaceChildren(new Option('All roles', ''));
+        roleNames.forEach((role) => select.append(new Option(role, role)));
+    };
+
+    if (isAdmin) {
+        const controls = document.createElement('div');
+        controls.className = 'user-admin__controls';
+        controls.innerHTML = `
+            <label>Search users
+                <input id="user-search" type="search" placeholder="Name, username, or email">
+            </label>
+            <label>Role
+                <select id="user-role-filter"></select>
+            </label>
+            <button type="button" data-action="search">Apply filters</button>
+        `;
+        page.insertBefore(controls, status);
+        controls.querySelector('[data-action="search"]').addEventListener('click', async () => {
+            currentPage = 1;
+            await loadUsers();
+        });
+    }
 
     const pagination = document.createElement('nav');
     pagination.className = 'user-admin__pagination';
@@ -164,6 +202,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     try {
+        if (isAdmin) {
+            setStatus('Loading roles...');
+            const rolesResponse = await fetch('/api/roles');
+            if (!rolesResponse.ok) {
+                throw new Error(`Unable to load roles (${rolesResponse.status}).`);
+            }
+            roleNames = (await rolesResponse.json()).map((role) => role.name);
+            populateRoleOptions(document.querySelector('#user-role-filter'));
+        }
         await loadUsers();
     } catch (error) {
         console.error(error);
