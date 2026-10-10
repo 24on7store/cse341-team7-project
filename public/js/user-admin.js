@@ -74,7 +74,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         return form;
     };
 
-    const renderUsers = ({ data: users, pagination }) => {
+    const renderUsers = (result) => {
+        if (!result || !Array.isArray(result.data) || !result.pagination) {
+            throw new Error('The user API returned an invalid response. Restart the server on the pagination branch.');
+        }
+
+        const { data: users, pagination } = result;
         list.replaceChildren();
         if (users.length === 0) {
             setStatus('No users found.');
