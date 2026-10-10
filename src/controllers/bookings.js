@@ -1,12 +1,14 @@
 import { getDb } from '../db/connect.js';
 import {
     createBooking,
-    getAllBookings as findAllBookings,
-    getBookingsByPassengerEmail,
+    getPaginatedBookings,
+    // getAllBookings as findAllBookings,
+    // getBookingsByPassengerEmail,
     getBookingById as findBookingById,
     updateBooking as updateBookingModel,
     deleteBooking as deleteBookingModel
 } from '../models/bookings.js';
+
 
 // Renders the booking form for a given schedule.
 export async function bookingPage(req, res) {
@@ -109,22 +111,61 @@ export async function confirmationPage(req, res) {
     }
 }
 
-// API: GET /api/bookings
+//API: GET/api/All bookings
+//Enhanced to serve Pull Request 1 (Pagination) & Pull Request 2 (Filtering)
 export async function getAllBookings(req, res) {
     try {
-         // CHANGED FROM req.session.user TO req.user FOR STEP 5 CONSISTENCY:
-        // const user = req.session.user;
         const user = req.user;
 
-        const bookings =
-            user.role === 'admin'
-                ? await findAllBookings()
-                : await getBookingsByPassengerEmail(user.email);
+        //Extract and cast pagination markers with defaults
+        const page = parseInt(req.query.page, 10) || 1;
+        const limit = parseInt(req.query.limit) || 10;
 
-        return res.status(200).json(bookings);
+        //Build runtime structural query configurations
+        let filter = {};
+
+        //Security boundary: Non-admins can only see matching email records
+        if (user.role !== 'admin') {
+            filter['passengers.email'] = user.email;
+        }
+
+        //PR2 Requirement: apply ticket class constraint dynamically
+        if (req.query.ticketClass) {
+            filter.ticketClass = req.query.ticketClass;
+        }
+
+        //PR2 requirement: apply data range limitations safely using mongoose
+        if (req.query.startDate || req.query.endDate) {
+            filter.createdAt = {};
+            if (req.query.startDate) {
+                filter.createdAt.$gte = new Date(req.query.startDate);
+            }
+            if (req.query.endDate) {
+                //Sets time metric boundary
+                const endOfDay = new Date(req.query.endDate);
+                endOfDay.setHours(23, 59, 59, 999);
+                filter.createdAt.$lte = endOfDay;
+            }
+        }
+
+
+        //Delegated to updated paginated data layer function
+        const { bookings, totalItems } = await getPaginatedBookings({filter, page, limit });
+            const totalPages = Math.ceil(totalItems / limit);
+
+            //Return combined package
+            return res.status(200).json({
+                bookings,
+                pagination: {
+                    currentPage: page, 
+                    totalPages: totalPages || 1,
+                    totalItems,
+                    limit
+                }
+            });
+
     } catch (error) {
         console.error('Error fetching bookings:', error);
-
         return res.status(500).json({
             error: 'Failed to fetch bookings'
         });
