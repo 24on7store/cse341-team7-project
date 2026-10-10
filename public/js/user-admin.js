@@ -87,7 +87,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         return form;
     };
 
-    const renderUsers = ({ data: users, pagination }) => {
+    const renderUsers = (result) => {
+        if (!result || !Array.isArray(result.data) || !result.pagination) {
+            throw new Error('The user API returned an invalid response.');
+        }
+
+        const { data: users, pagination } = result;
         list.replaceChildren();
         if (users.length === 0) {
             setStatus('No users found.');
@@ -136,7 +141,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             throw new Error(message);
         }
-        renderUsers(await response.json());
+        const result = await response.json();
+        renderUsers(result);
     };
 
     const mutateUser = async (id, method, body) => {
@@ -206,9 +212,25 @@ document.addEventListener('DOMContentLoaded', async () => {
             setStatus('Loading roles...');
             const rolesResponse = await fetch('/api/roles');
             if (!rolesResponse.ok) {
-                throw new Error(`Unable to load roles (${rolesResponse.status}).`);
+                let message = `Unable to load roles (${rolesResponse.status}).`;
+                try {
+                    const result = await rolesResponse.json();
+                    message = result.error || result.message || message;
+                } catch (error) {
+                    console.error('Unable to read roles API error:', error);
+                }
+                throw new Error(message);
             }
-            roleNames = (await rolesResponse.json()).map((role) => role.name);
+            const rolesResult = await rolesResponse.json();
+            if (!Array.isArray(rolesResult)) {
+                throw new Error('The roles API returned an invalid response.');
+            }
+            roleNames = rolesResult
+                .map((role) => role?.name)
+                .filter((role) => typeof role === 'string' && role.length > 0);
+            if (roleNames.length === 0) {
+                throw new Error('No roles are configured in the database.');
+            }
             populateRoleOptions(document.querySelector('#user-role-filter'));
         }
         await loadUsers();
