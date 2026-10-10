@@ -111,7 +111,7 @@ export async function confirmationPage(req, res) {
     }
 }
 
-//API: GET/api/Allbookings
+//API: GET/api/All bookings
 //Enhanced to serve Pull Request 1 (Pagination) & Pull Request 2 (Filtering)
 export async function getAllBookings(req, res) {
     try {
@@ -171,30 +171,6 @@ export async function getAllBookings(req, res) {
         });
     }
 }
-
-// // API: GET /api/bookings
-// // Enhanced to serve Pull Request 1 (Pagination) & Pull Request 2 (Filtering)
-// export async function getAllBookings(req, res) {
-//     try {
-//          // CHANGED FROM req.session.user TO req.user FOR STEP 5 CONSISTENCY:
-//         // const user = req.session.user;
-//         const user = req.user;
-        
-
-//         const bookings =
-//             user.role === 'admin'
-//                 ? await findAllBookings()
-//                 : await getBookingsByPassengerEmail(user.email);
-
-//         return res.status(200).json(bookings);
-//     } catch (error) {
-//         console.error('Error fetching bookings:', error);
-
-//         return res.status(500).json({
-//             error: 'Failed to fetch bookings'
-//         });
-//     }
-// }
 
 // API: GET /api/bookings/:id
 export async function getBookingById(req, res) {
