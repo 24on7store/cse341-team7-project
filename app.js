@@ -39,26 +39,27 @@ app.use(
         cookie: {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
-            //Commented because the page should be 1-hour inactivity tmeout rather than 24 hours
+            //Commented because the page should be 1-hour inactivity timeout rather than 24 hours
             // maxAge: 1000 * 60 * 60 * 24
             maxAge: 60 * 60 * 1000
         }
     })
 );
-//ADDED ON WEEK04 #2 
-//ACTIVATE STEP 5 SESSION LOADING GLOBALLY HERE:
-app.use(loadSessionUser); 
+ 
 
 //ADDED ON WEEK04 #2 
 import { loadSessionUser } from './src/middleware/auth.js';
-
-// STEP 6: Load the user BEFORE any page or API routes
+//ADDED ON WEEK04 #2 
+//ACTIVATE STEP 5 SESSION LOADING GLOBALLY HERE:
 app.use(loadSessionUser);
 
-//Routes and other middleware run after this
-app.use(globalMiddleware);
-app.use('/', routes);
+// STEP 6: Load the user BEFORE any page or API routes
+//app.use(loadSessionUser);
 
+//Routes and other middleware run after this
+// app.use(globalMiddleware);
+// app.use('/', routes);
+//Added on week 05 Feature set
 
 app.use(globalMiddleware);
 app.use('/', routes);
