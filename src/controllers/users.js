@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import {
     deleteUser as deleteUserModel,
+    getAllRoles,
     getRoleByName,
     getUserById,
     getUsersPage,
@@ -29,8 +30,13 @@ const parsePagination = (query) => {
         return { error: 'Limit must be an integer between 1 and 50.' };
     }
 
-    return { page, limit };
+    const role = query.role === undefined ? '' : query.role.trim().toLowerCase();
+    const search = query.q === undefined ? '' : query.q.trim();
+
+    return { page, limit, role, search };
 };
+
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 export function usersAdminPage(req, res) {
     return res.render('users', {
@@ -45,7 +51,7 @@ export async function getUsers(req, res) {
             return res.status(400).json({ error: pagination.error });
         }
 
-        const { page, limit } = pagination;
+        const { page, limit, role, search } = pagination;
         if (req.user.role !== 'admin') {
             const user = await getUserById(req.user.id);
 
@@ -59,7 +65,17 @@ export async function getUsers(req, res) {
             });
         }
 
-        const { users, totalItems } = await getUsersPage({ page, limit });
+        const roleDocument = role ? await getRoleByName(role) : null;
+        if (role && !roleDocument) {
+            return res.status(400).json({ error: 'Role does not exist.' });
+        }
+
+        const { users, totalItems } = await getUsersPage({
+            page,
+            limit,
+            query: escapeRegex(search),
+            roleId: roleDocument?._id
+        });
         return res.status(200).json({
             data: users,
             pagination: {
@@ -67,11 +83,21 @@ export async function getUsers(req, res) {
                 limit,
                 totalItems,
                 totalPages: Math.ceil(totalItems / limit)
-            }
+            },
+            query: { q: search, role }
         });
     } catch (error) {
         console.error('Error fetching users:', error);
         return res.status(500).json({ error: 'Failed to fetch users' });
+    }
+}
+
+export async function getRoles(req, res) {
+    try {
+        return res.status(200).json(await getAllRoles());
+    } catch (error) {
+        console.error('Error fetching roles:', error);
+        return res.status(500).json({ error: 'Failed to fetch roles' });
     }
 }
 
