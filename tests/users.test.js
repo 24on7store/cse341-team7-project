@@ -46,10 +46,10 @@ describe('Protected user administration', () => {
 
         const listResponse = await adminAgent.get('/api/users');
         expect(listResponse.status).toBe(200);
-        expect(listResponse.body).toHaveLength(2);
-        expect(listResponse.body.every((user) => !user.passwordHash)).toBe(true);
+        expect(listResponse.body.data).toHaveLength(2);
+        expect(listResponse.body.data.every((user) => !user.passwordHash)).toBe(true);
 
-        const target = listResponse.body.find((user) => user.username === userDetails.username);
+        const target = listResponse.body.data.find((user) => user.username === userDetails.username);
         const updateResponse = await adminAgent
             .put(`/api/users/${target._id}`)
             .send({
@@ -71,7 +71,7 @@ describe('Protected user administration', () => {
         expect(deleteResponse.status).toBe(204);
 
         const remainingUsers = await adminAgent.get('/api/users');
-        expect(remainingUsers.body).toHaveLength(1);
+        expect(remainingUsers.body.data).toHaveLength(1);
     });
 
     test('limits regular users to their own account', async () => {
@@ -81,13 +81,13 @@ describe('Protected user administration', () => {
 
         const ownUsers = await userAgent.get('/api/users');
         expect(ownUsers.status).toBe(200);
-        expect(ownUsers.body).toHaveLength(1);
-        expect(ownUsers.body[0].username).toBe(userDetails.username);
+        expect(ownUsers.body.data).toHaveLength(1);
+        expect(ownUsers.body.data[0].username).toBe(userDetails.username);
 
         const adminAgent = request.agent(app);
         await login(adminAgent, adminCredentials);
         const adminUsers = await adminAgent.get('/api/users');
-        const admin = adminUsers.body.find((user) => user.username === 'admin');
+        const admin = adminUsers.body.data.find((user) => user.username === 'admin');
 
         const forbiddenUpdate = await userAgent
             .put(`/api/users/${admin._id}`)
@@ -99,7 +99,7 @@ describe('Protected user administration', () => {
         expect(forbiddenUpdate.status).toBe(403);
 
         const ownUpdate = await userAgent
-            .put(`/api/users/${ownUsers.body[0]._id}`)
+            .put(`/api/users/${ownUsers.body.data[0]._id}`)
             .send({
                 displayName: 'Updated Self',
                 username: userDetails.username,
@@ -111,10 +111,28 @@ describe('Protected user administration', () => {
         const forbiddenDelete = await userAgent.delete(`/api/users/${admin._id}`);
         expect(forbiddenDelete.status).toBe(403);
 
-        const ownDelete = await userAgent.delete(`/api/users/${ownUsers.body[0]._id}`);
+        const ownDelete = await userAgent.delete(`/api/users/${ownUsers.body.data[0]._id}`);
         expect(ownDelete.status).toBe(204);
 
         const deletedUserResponse = await userAgent.get('/api/users');
         expect(deletedUserResponse.status).toBe(401);
+    });
+
+    test('returns pagination metadata and validates pagination queries', async () => {
+        const adminAgent = request.agent(app);
+        await login(adminAgent, adminCredentials);
+
+        const response = await adminAgent.get('/api/users?page=1&limit=1');
+        expect(response.status).toBe(200);
+        expect(response.body.pagination).toMatchObject({
+            page: 1,
+            limit: 1,
+            totalItems: 1,
+            totalPages: 1
+        });
+        expect(response.body.data).toHaveLength(1);
+
+        const invalidResponse = await adminAgent.get('/api/users?page=0&limit=51');
+        expect(invalidResponse.status).toBe(400);
     });
 });
