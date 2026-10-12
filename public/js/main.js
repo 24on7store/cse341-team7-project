@@ -44,6 +44,11 @@ const hookTrainsCatalog = async () => {
     const nextButton = document.getElementById('trains-next');
     const pageInfoEl = document.getElementById('trains-page-info');
 
+    const searchInput = document.getElementById('trains-search');
+    const searchButton = document.getElementById('trains-search-button');
+    const sortSelect = document.getElementById('trains-sort');
+    const orderSelect = document.getElementById('trains-order');
+
     if (!listEl || !templateEl) {
         return;
     }
@@ -52,7 +57,7 @@ const hookTrainsCatalog = async () => {
     const limit = 10;
     let totalPages = 1;
 
-    const loadTrains = async (page) => {
+    const loadTrains = async (page = 1) => {
         if (loadingEl) {
             loadingEl.hidden = false;
         }
@@ -62,9 +67,25 @@ const hookTrainsCatalog = async () => {
         }
 
         try {
-            const response = await fetch(
-                `/api/trains?page=${page}&limit=${limit}`
-            );
+            const url = new URL('/api/trains', window.location.origin);
+
+            url.searchParams.set('page', page);
+            url.searchParams.set('limit', limit);
+
+            const search = searchInput?.value.trim() || '';
+            const sort = sortSelect?.value || '';
+            const order = orderSelect?.value || 'asc';
+
+            if (search) {
+                url.searchParams.set('q', search);
+            }
+
+            if (sort) {
+                url.searchParams.set('sort', sort);
+                url.searchParams.set('order', order);
+            }
+
+            const response = await fetch(url);
 
             if (!response.ok) {
                 throw new Error(`Failed to load trains (${response.status})`);
@@ -146,6 +167,31 @@ const hookTrainsCatalog = async () => {
             }
         }
     };
+
+    searchButton?.addEventListener('click', () => {
+        currentPage = 1;
+        loadTrains(1);
+    });
+
+    searchInput?.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            currentPage = 1;
+            loadTrains(1);
+        }
+    });
+
+    sortSelect?.addEventListener('change', () => {
+        currentPage = 1;
+        loadTrains(1);
+    });
+
+    orderSelect?.addEventListener('change', () => {
+        if (sortSelect?.value) {
+            currentPage = 1;
+            loadTrains(1);
+        }
+    });
 
     previousButton?.addEventListener('click', () => {
         if (currentPage > 1) {

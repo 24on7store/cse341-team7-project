@@ -8,7 +8,42 @@
 </section>
 
 <section class="trains-catalog">
+    <div class="trains-controls">
+        <div class="trains-search">
+            <label for="trains-search">Search trains</label>
+            <input
+                type="search"
+                id="trains-search"
+                name="q"
+                placeholder="Search by name, operator, type..."
+            >
+            <button type="button" id="trains-search-button">
+                Search
+            </button>
+        </div>
+
+        <div class="trains-sort">
+            <label for="trains-sort">Sort by</label>
+            <select id="trains-sort" name="sort">
+                <option value="">Default</option>
+                <option value="name">Name</option>
+                <option value="operator">Operator</option>
+                <option value="type">Type</option>
+                <option value="maxSpeedKmh">Top Speed</option>
+                <option value="capacity">Capacity</option>
+                <option value="powerSource">Power Source</option>
+            </select>
+
+            <label for="trains-order">Order</label>
+            <select id="trains-order" name="order">
+                <option value="asc">Ascending</option>
+                <option value="desc">Descending</option>
+            </select>
+        </div>
+    </div>
+
     <div class="trains-state" id="trains-loading">Loading trains...</div>
+
     <div class="trains-state trains-error" id="trains-error" hidden></div>
 
     <div class="trains-grid" id="trains-list"></div>
@@ -56,7 +91,6 @@
                     <dd data-field="power"></dd>
                 </div>
             </dl>
-
             <p class="train-best-for">
                 <strong>Best For:</strong>
                 <span data-field="best-for"></span>
