@@ -11,6 +11,7 @@ import {
 } from '../controllers/schedules.js';
 import {
   deleteUser,
+  getUser,
   getRoles,
   getUsers,
   updateUser
@@ -77,6 +78,37 @@ const router = Router();
  *         description: Server error.
  */
 router.get('/api/users', requireApiLogin, getUsers);
+
+/**
+ * @swagger
+ * /api/users/{id}:
+ *   get:
+ *     summary: Get one user
+ *     description: Users may view themselves. Administrators may view any user.
+ *     tags:
+ *       - Users
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: MongoDB user ID.
+ *     responses:
+ *       200:
+ *         description: The requested sanitized user.
+ *       401:
+ *         description: Authentication is required.
+ *       403:
+ *         description: The signed-in user cannot view this user.
+ *       404:
+ *         description: User not found.
+ *       500:
+ *         description: Server error.
+ */
+router.get('/api/users/:id', requireApiLogin, getUser);
 
 /**
  * @swagger
