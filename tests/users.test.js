@@ -93,6 +93,72 @@ describe('Users API authentication and read behavior', () => {
             totalPages: 1
         });
     });
+
+    test('allows an administrator to read one user without private authentication data', async () => {
+        const { details } = await registerUser();
+        const adminAgent = request.agent(app);
+        await login(adminAgent, adminCredentials);
+        const usersResponse = await adminAgent.get('/api/users');
+        const target = usersResponse.body.data.find(
+            (user) => user.username === details.username
+        );
+
+        const response = await adminAgent.get(`/api/users/${target._id}`);
+
+        expect(response.status).toBe(200);
+        expect(response.body).toMatchObject({
+            displayName: details.displayName,
+            username: details.username,
+            email: details.email
+        });
+        expectSanitizedUser(response.body);
+    });
+
+    test('allows a standard user to read their own user and rejects another user', async () => {
+        const { details } = await registerUser();
+        const userAgent = request.agent(app);
+        await login(userAgent, details);
+        const ownListResponse = await userAgent.get('/api/users');
+        const ownId = ownListResponse.body.data[0]._id;
+
+        const ownResponse = await userAgent.get(`/api/users/${ownId}`);
+
+        expect(ownResponse.status).toBe(200);
+        expect(ownResponse.body.username).toBe(details.username);
+        expectSanitizedUser(ownResponse.body);
+
+        const adminAgent = request.agent(app);
+        await login(adminAgent, adminCredentials);
+        const adminListResponse = await adminAgent.get('/api/users');
+        const admin = adminListResponse.body.data.find(
+            (user) => user.username === 'admin'
+        );
+        const forbiddenResponse = await userAgent.get(`/api/users/${admin._id}`);
+
+        expect(forbiddenResponse.status).toBe(403);
+        expect(forbiddenResponse.body).toEqual({
+            error: 'You do not have permission to view this user.'
+        });
+    });
+
+    test('rejects unauthenticated and unknown individual-user requests', async () => {
+        const { savedUser } = await registerUser();
+        const unauthenticatedResponse = await request(app)
+            .get(`/api/users/${savedUser._id}`);
+        expect(unauthenticatedResponse.status).toBe(401);
+
+        const adminAgent = request.agent(app);
+        await login(adminAgent, adminCredentials);
+        const missingResponse = await adminAgent.get(
+            '/api/users/507f1f77bcf86cd799439011'
+        );
+        const invalidResponse = await adminAgent.get('/api/users/not-an-id');
+
+        expect(missingResponse.status).toBe(404);
+        expect(missingResponse.body).toEqual({ error: 'User not found' });
+        expect(invalidResponse.status).toBe(404);
+        expect(invalidResponse.body).toEqual({ error: 'User not found' });
+    });
 });
 
 describe('Users API registration and write behavior', () => {
