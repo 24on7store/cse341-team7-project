@@ -135,4 +135,62 @@ describe('Protected user administration', () => {
         const invalidResponse = await adminAgent.get('/api/users?page=0&limit=51');
         expect(invalidResponse.status).toBe(400);
     });
+
+    test('filters users by role and keyword across profile fields', async () => {
+        await registerUser();
+        const secondUser = {
+            ...userDetails,
+            displayName: 'Email Search User',
+            username: 'email-search-user',
+            email: 'unique-search@example.com'
+        };
+        await request(app).post('/auth/register').send(secondUser);
+        const adminAgent = request.agent(app);
+        await login(adminAgent, adminCredentials);
+
+        const displayMatch = await adminAgent.get('/api/users?q=Test%20User');
+        expect(displayMatch.status).toBe(200);
+        expect(displayMatch.body.data).toHaveLength(1);
+        expect(displayMatch.body.data[0].username).toBe(userDetails.username);
+
+        const emailMatch = await adminAgent.get('/api/users?q=unique-search');
+        expect(emailMatch.status).toBe(200);
+        expect(emailMatch.body.data).toHaveLength(1);
+        expect(emailMatch.body.data[0].username).toBe(secondUser.username);
+
+        const roleMatch = await adminAgent.get('/api/users?role=user');
+        expect(roleMatch.status).toBe(200);
+        expect(roleMatch.body.pagination.totalItems).toBe(2);
+        expect(roleMatch.body.data.every((user) => user.role.name === 'user')).toBe(true);
+    });
+
+    test('returns empty data and zero totals for a search with no matches', async () => {
+        const adminAgent = request.agent(app);
+        await login(adminAgent, adminCredentials);
+
+        const response = await adminAgent.get('/api/users?q=no-such-user');
+
+        expect(response.status).toBe(200);
+        expect(response.body.data).toEqual([]);
+        expect(response.body.pagination).toMatchObject({
+            page: 1,
+            limit: 10,
+            totalItems: 0,
+            totalPages: 0
+        });
+        expect(response.body.query).toEqual({
+            q: 'no-such-user',
+            role: ''
+        });
+    });
+
+    test('rejects an unknown role filter', async () => {
+        const adminAgent = request.agent(app);
+        await login(adminAgent, adminCredentials);
+
+        const response = await adminAgent.get('/api/users?role=unknown');
+
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({ error: 'Role does not exist.' });
+    });
 });
