@@ -75,6 +75,32 @@ export async function getUsers(req, res) {
     }
 }
 
+export async function getUser(req, res) {
+    try {
+        const { id } = req.params;
+
+        if (!mongoose.isValidObjectId(id)) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        if (!hasUserAccess(req, id)) {
+            return res.status(403).json({
+                error: 'You do not have permission to view this user.'
+            });
+        }
+
+        const user = await getUserById(id);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        return res.status(200).json(user);
+    } catch (error) {
+        console.error('Error fetching user:', error);
+        return res.status(500).json({ error: 'Failed to fetch user' });
+    }
+}
+
 export async function updateUser(req, res) {
     try {
         const { id } = req.params;
