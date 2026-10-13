@@ -47,11 +47,63 @@ export async function getTripById(req, res){
 
 export async function getAllTrips(req, res) {
   try {
-    const trips = await findAllTrips();
-    return res.status(200).json(trips);
+    const pageValue = req.query.page ?? '1';
+    const limitValue = req.query.limit ?? '10';
+    const q = req.query.q?.trim() ?? '';
+    const region = req.query.region?.trim() ?? '';
+    const season = req.query.season?.trim() ?? '';
+
+    if (
+      !/^\d+$/.test(pageValue) ||
+      !/^\d+$/.test(limitValue)
+    ) {
+      return res.status(400).json({
+        error: 'Page and limit must be positive integers.'
+      });
+    }
+
+    const page = Number(pageValue);
+    const limit = Number(limitValue);
+
+    if (page < 1 || limit < 1) {
+      return res.status(400).json({
+        error: 'Page and limit must be positive integers.'
+      });
+    }
+
+    if (limit > 50) {
+      return res.status(400).json({
+        error: 'Limit cannot exceed 50.'
+      });
+    }
+
+    const { data, totalItems } = await findAllTrips({
+      page,
+      limit,
+      q,
+      region,
+      season
+    });
+
+    const totalPages = totalItems === 0
+      ? 0
+      : Math.ceil(totalItems / limit);
+
+    return res.status(200).json({
+      data,
+      pagination: {
+        page,
+        limit,
+        totalItems,
+        totalPages
+      }
+    });
   } catch (error) {
-    console.error("Error fetching trips API:", error);
-    return res.status(500).json({ error: "Failed to fetch trips" });
+    console.error('Error fetching trips API:', error);
+
+    return res.status(500).json({
+      error: 'Failed to fetch trips'
+    });
   }
 }
 
@@ -59,25 +111,20 @@ export async function createTrip(req, res) {
   try {
     const db = getDb();
     const trip = req.body;
-
     if (!trip.id || !trip.name || !trip.duration) {
       return res.status(400).json({
         error: "id, name, and duration are required"
       });
     }
-
     const existingTrip = await db.collection("trips").findOne({
       id: trip.id
     });
-
     if (existingTrip) {
       return res.status(409).json({
         error: "A trip with this id already exists"
       });
     }
-
     await db.collection("trips").insertOne(trip);
-
     return res.status(201).json(trip);
   } catch (error) {
     console.error("Error creating trip:", error);
