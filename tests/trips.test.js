@@ -10,16 +10,29 @@ describe('GET /api/trips', () => {
     expect(response.status).toBe(200);
     expect(response.headers['content-type']).toContain('application/json');
 
-    expect(response.body).toBeInstanceOf(Array);
-    expect(response.body.length).toBeGreaterThan(0);
+    // Verify the response contains an array of trips.
+    expect(response.body.data).toBeInstanceOf(Array);
+    expect(response.body.data.length).toBeGreaterThan(0);
+
+    // Verify the pagination metadata.
+    expect(response.body.pagination).toBeDefined();
+    expect(response.body.pagination.page).toBe(1);
+    expect(response.body.pagination.limit).toBe(10);
+    expect(response.body.pagination.totalItems).toBeGreaterThanOrEqual(
+      response.body.data.length
+    );
+    expect(response.body.pagination.totalPages).toBe(
+      Math.ceil(
+        response.body.pagination.totalItems /
+        response.body.pagination.limit
+      )
+    );
   });
 
   test('returns the expected seeded trips', async () => {
     const response = await request(app).get('/api/trips');
-
     expect(response.status).toBe(200);
-
-    expect(response.body).toEqual(
+    expect(response.body.data).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           id: 'alpine-panorama',
@@ -31,6 +44,151 @@ describe('GET /api/trips', () => {
         })
       ])
     );
+  });
+
+  test('returns paginated trips with metadata', async () => {
+    const response = await request(app)
+      .get('/api/trips?page=1&limit=2');
+    expect(response.status).toBe(200);
+    expect(response.body.data).toBeInstanceOf(Array);
+    expect(response.body.data.length).toBeLessThanOrEqual(2);
+    expect(response.body.pagination.page).toBe(1);
+    expect(response.body.pagination.limit).toBe(2);
+    expect(response.body.pagination.totalItems).toBeGreaterThan(0);
+    expect(response.body.pagination.totalPages).toBe(
+      Math.ceil(response.body.pagination.totalItems / 2)
+    );
+  });
+
+  test('returns the requested second page', async () => {
+    const response = await request(app)
+      .get('/api/trips?page=2&limit=2');
+
+    expect(response.status).toBe(200);
+    expect(response.body.pagination.page).toBe(2);
+    expect(response.body.pagination.limit).toBe(2);
+    expect(response.body.data.length).toBeLessThanOrEqual(2);
+  });
+
+  test('filters trips by region', async () => {
+    const response = await request(app)
+      .get('/api/trips?region=central');
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.length).toBeGreaterThan(0);
+
+    for (const trip of response.body.data) {
+      expect(trip.region.toLowerCase()).toBe('central');
+    }
+  });
+
+  test('filters trips by best season', async () => {
+    const response = await request(app)
+      .get('/api/trips?season=autumn');
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.length).toBeGreaterThan(0);
+
+    for (const trip of response.body.data) {
+      expect(trip.bestSeason.toLowerCase()).toBe('autumn');
+    }
+  });
+
+  test('searches trips by keyword', async () => {
+    const response = await request(app)
+      .get('/api/trips?q=gorge');
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.length).toBeGreaterThan(0);
+
+    const matchingTrips = response.body.data.filter((trip) => {
+      const searchableText = [
+        trip.id,
+        trip.name,
+        trip.description,
+        trip.region,
+        trip.startStation,
+        trip.endStation,
+        ...(Array.isArray(trip.highlights) ? trip.highlights : []),
+        trip.bestSeason
+      ].join(' ').toLowerCase();
+
+      return searchableText.includes('gorge');
+    });
+
+    expect(matchingTrips.length).toBe(response.body.data.length);
+  });
+
+  test('combines region and season filters', async () => {
+    const response = await request(app)
+      .get('/api/trips?region=central&season=autumn');
+
+    expect(response.status).toBe(200);
+
+    for (const trip of response.body.data) {
+      expect(trip.region.toLowerCase()).toBe('central');
+      expect(trip.bestSeason.toLowerCase()).toBe('autumn');
+    }
+  });
+
+  test('returns an empty result when the search has no matches', async () => {
+    const response = await request(app)
+      .get('/api/trips?q=nonexistentkeyword123xyz');
+
+    expect(response.status).toBe(200);
+    expect(response.body.data).toEqual([]);
+    expect(response.body.pagination.totalItems).toBe(0);
+    expect(response.body.pagination.totalPages).toBe(0);
+  });
+
+  test('returns an empty data array when the page is beyond the last page', async () => {
+    const response = await request(app)
+      .get('/api/trips?page=999&limit=2');
+
+    expect(response.status).toBe(200);
+    expect(response.body.data).toEqual([]);
+    expect(response.body.pagination.page).toBe(999);
+    expect(response.body.pagination.totalItems).toBeGreaterThan(0);
+  });
+
+  test('returns 400 for an invalid page', async () => {
+    const response = await request(app)
+      .get('/api/trips?page=abc');
+
+    expect(response.status).toBe(400);
+  });
+
+  test('returns 400 for page zero', async () => {
+    const response = await request(app)
+      .get('/api/trips?page=0');
+
+    expect(response.status).toBe(400);
+  });
+
+  test('returns 400 for an invalid limit', async () => {
+    const response = await request(app)
+      .get('/api/trips?limit=0');
+
+    expect(response.status).toBe(400);
+  });
+
+  test('returns 400 when limit exceeds 50', async () => {
+    const response = await request(app)
+      .get('/api/trips?limit=51');
+
+    expect(response.status).toBe(400);
+  });
+
+  test('combines keyword search with pagination', async () => {
+    const response = await request(app)
+      .get('/api/trips?q=gorge&page=1&limit=1');
+
+    expect(response.status).toBe(200);
+    expect(response.body.pagination.page).toBe(1);
+    expect(response.body.pagination.limit).toBe(1);
+    expect(response.body.data.length).toBeLessThanOrEqual(1);
+    expect(response.body.pagination.totalItems).toBeGreaterThan(0);
+  });
   });
 
   test('returns a trip added to the test database', async () => {
@@ -55,7 +213,7 @@ describe('GET /api/trips', () => {
 
     expect(response.status).toBe(200);
 
-    expect(response.body).toEqual(
+    expect(response.body.data).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           id: 'test-trip',
@@ -64,7 +222,6 @@ describe('GET /api/trips', () => {
       ])
     );
   });
-});
 
 describe('GET /api/trips/:id', () => {
   test('returns an existing trip successfully', async () => {

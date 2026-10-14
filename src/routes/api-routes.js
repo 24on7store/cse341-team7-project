@@ -303,7 +303,6 @@ import {
 import { requireApiRole } from '../middleware/auth.js';
 
 // ... KEEP EXISTING BOOKINGS/SCHEDULES ROUTES ...
-
 /**
  * @swagger
  * /api/trips:
