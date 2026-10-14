@@ -11,6 +11,8 @@ import {
 } from '../controllers/schedules.js';
 import {
   deleteUser,
+  getUser,
+  getRoles,
   getUsers,
   updateUser
 } from '../controllers/users.js';
@@ -36,6 +38,14 @@ const router = Router();
  *       - in: query
  *         name: limit
  *         schema: { type: integer, minimum: 1, maximum: 50, default: 10 }
+ *       - in: query
+ *         name: role
+ *         schema: { type: string }
+ *         description: Exact database role name.
+ *       - in: query
+ *         name: q
+ *         schema: { type: string }
+ *         description: Case-insensitive search across display name, username, and email.
  *     responses:
  *       200:
  *         description: A paginated list of users without password hashes.
@@ -55,14 +65,67 @@ const router = Router();
  *                     limit: { type: integer }
  *                     totalItems: { type: integer }
  *                     totalPages: { type: integer }
+ *                 query:
+ *                   type: object
+ *                   properties:
+ *                     q: { type: string }
+ *                     role: { type: string }
  *       400:
- *         description: Invalid page or limit.
+ *         description: Invalid pagination or role value.
  *       401:
  *         description: Authentication is required or the session user no longer exists.
  *       500:
  *         description: Server error.
  */
 router.get('/api/users', requireApiLogin, getUsers);
+
+/**
+ * @swagger
+ * /api/users/{id}:
+ *   get:
+ *     summary: Get one user
+ *     description: Users may view themselves. Administrators may view any user.
+ *     tags:
+ *       - Users
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: MongoDB user ID.
+ *     responses:
+ *       200:
+ *         description: The requested sanitized user.
+ *       401:
+ *         description: Authentication is required.
+ *       403:
+ *         description: The signed-in user cannot view this user.
+ *       404:
+ *         description: User not found.
+ *       500:
+ *         description: Server error.
+ */
+router.get('/api/users/:id', requireApiLogin, getUser);
+
+/**
+ * @swagger
+ * /api/roles:
+ *   get:
+ *     summary: List available user roles
+ *     tags:
+ *       - Users
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Available database roles.
+ *       401:
+ *         description: Authentication is required.
+ */
+router.get('/api/roles', requireApiLogin, getRoles);
 
 /**
  * @swagger
