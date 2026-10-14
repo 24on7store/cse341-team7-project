@@ -11,6 +11,7 @@ import {
 } from '../controllers/schedules.js';
 import {
   deleteUser,
+  getUser,
   getUsers,
   updateUser
 } from '../controllers/users.js';
@@ -63,6 +64,8 @@ const router = Router();
  *         description: Server error.
  */
 router.get('/api/users', requireApiLogin, getUsers);
+
+router.get('/api/users/:id', requireApiLogin, getUser);
 
 /**
  * @swagger
