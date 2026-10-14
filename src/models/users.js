@@ -1,98 +1,126 @@
 import User from './schemas/users.js';
-//Added on week 03 based on #3 step 4 activities
 import Role from './schemas/roles.js';
 import bcrypt from 'bcrypt';
 
 export async function createUser(userData) {
-  const user = new User(userData);
-  await user.save();
+const user = new User(userData);
+await user.save();
 
-  return user.toObject();
+const result = user.toObject();
+delete result.passwordHash;
+
+return result;
 }
 
 export async function getUserByUsername(username) {
-  // return User.findOne({ username }).lean();
-  //Added the populate role related to step 2
-  return User.findOne({ username }).populate('role').lean();
+return User.findOne({ username })
+.select('-passwordHash')
+.populate('role')
+.lean();
 }
 
 export async function getUserByEmail(email) {
-  return User.findOne({ email }).lean();
+return User.findOne({ email })
+.select('-passwordHash')
+.populate('role')
+.lean();
 }
 
 export async function getUserById(id) {
-  // return User.findById(id).lean();
-  //Added .populate('role') so sthat dashborad work on all requests
-  return User.findById(id).select('-passwordHash').populate('role').lean();
+return User.findById(id)
+.select('-passwordHash')
+.populate('role')
+.lean();
 }
 
 export async function getAllUsers() {
-  return User.find({})
-    .select('-passwordHash')
-    .populate('role')
-    .lean();
+return User.find({})
+.select('-passwordHash')
+.populate('role')
+.sort({ username: 1 })
+.lean();
 }
 
-export async function getUsersPage({ page, limit, query, roleId }) {
-  const filter = {};
+export async function getUsersPage({ page = 1, limit = 10, query, roleId } = {}) {
+const safePage = Number.isInteger(Number(page)) && Number(page) > 0
+? Number(page)
+: 1;
 
-  if (query) {
-    const search = new RegExp(query, 'i');
-    filter.$or = [
-      { displayName: search },
-      { username: search },
-      { email: search }
-    ];
-  }
+const safeLimit = Number.isInteger(Number(limit)) && Number(limit) > 0
+? Math.min(Number(limit), 100)
+: 10;
 
-  if (roleId) {
-    filter.role = roleId;
-  }
+const filter = {};
 
-  const [users, totalItems] = await Promise.all([
-    User.find(filter)
-      .select('-passwordHash')
-      .populate('role')
-      .sort({ username: 1 })
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .lean(),
-    User.countDocuments(filter)
-  ]);
+if (typeof query === 'string' && query.trim()) {
+const escapedQuery = query.trim().replace(/[.*+?^${}()|[]\]/g, '\$&');
+const searchRegex = new RegExp(escapedQuery, 'i');
 
-  return { users, totalItems };
+```
+filter.$or = [
+  { displayName: searchRegex },
+  { username: searchRegex },
+  { email: searchRegex }
+];
+```
+
+}
+
+if (roleId) {
+filter.role = roleId;
+}
+
+const [users, totalItems] = await Promise.all([
+User.find(filter)
+.select('-passwordHash')
+.populate('role')
+.sort({ username: 1 })
+.skip((safePage - 1) * safeLimit)
+.limit(safeLimit)
+.lean(),
+User.countDocuments(filter)
+]);
+
+return { users, totalItems };
 }
 
 export async function updateUser(id, userData) {
-  return User.findByIdAndUpdate(id, userData, {
-    returnDocument: 'after',
-    runValidators: true
-  })
-    .select('-passwordHash')
-    .populate('role')
-    .lean();
+const updatedUser = await User.findByIdAndUpdate(id, userData, {
+returnDocument: 'after',
+runValidators: true
+})
+.select('-passwordHash')
+.populate('role')
+.lean();
+
+return updatedUser;
 }
 
 export async function deleteUser(id) {
-  return User.findByIdAndDelete(id).lean();
+const deletedUser = await User.findByIdAndDelete(id)
+.select('-passwordHash')
+.lean();
+
+return deletedUser;
 }
 
 export async function getRoleByName(name) {
-  return Role.findOne({ name }).lean();
+return Role.findOne({ name }).lean();
 }
 
 export async function getAllRoles() {
-  return Role.find({}).select('name -_id').sort({ name: 1 }).lean();
+return Role.find({})
+.select('name -_id')
+.sort({ name: 1 })
+.lean();
 }
 
-
-
 export async function findUserByEmail(email) {
-  // Fetches a user by their email address and populates the explicit Role model data
-  return User.findOne({ email }).populate('role');
+return User.findOne({ email })
+.populate('role')
+.lean();
 }
 
 export async function verifyPassword(password, passwordHash) {
-  // Securely evaluates plain-text user login inputs against the database hash via bcrypt
-  return bcrypt.compare(password, passwordHash);
+return bcrypt.compare(password, passwordHash);
 }
