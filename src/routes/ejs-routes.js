@@ -9,6 +9,9 @@ import { renderTripsList, tripDetailsPage } from '../controllers/trips.js';
 import { userDashboardPage } from '../controllers/dashboard.js'
 const router = Router();
 
+//Added on week05 Feature set 3 ine to map the /bookings URL path
+router.get('/bookings', bookingsAdminPage);
+
 // Protected bookings admin page
 router.get('/bookings-admin', requirePageLogin, bookingsAdminPage);
 
