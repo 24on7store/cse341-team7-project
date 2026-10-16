@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import request from 'supertest';
 import app from '../app.js';
+import { getDb } from '../src/db/connect.js';
 
 const adminCredentials = {
     username: 'admin',
@@ -116,6 +117,71 @@ describe('Protected user administration', () => {
 
         const deletedUserResponse = await userAgent.get('/api/users');
         expect(deletedUserResponse.status).toBe(401);
+    });
+
+    test('rejects duplicate registration and does not create a second account', async () => {
+        await registerUser();
+
+        const duplicateResponse = await request(app)
+            .post('/auth/register')
+            .send(userDetails);
+
+        expect(duplicateResponse.status).toBe(409);
+        expect(duplicateResponse.text).toContain('Username is already in use.');
+        expect(
+            await getDb().collection('users').countDocuments({
+                username: userDetails.username
+            })
+        ).toBe(1);
+    });
+
+    test('rejects invalid profile and role data without changing the user record', async () => {
+        await registerUser();
+        const adminAgent = request.agent(app);
+        await login(adminAgent, adminCredentials);
+        const usersResponse = await adminAgent.get('/api/users');
+        const target = usersResponse.body.data.find(
+            (user) => user.username === userDetails.username
+        );
+
+        const invalidProfile = await adminAgent
+            .put(`/api/users/${target._id}`)
+            .send({
+                displayName: '',
+                username: userDetails.username,
+                email: userDetails.email
+            });
+        expect(invalidProfile.status).toBe(400);
+
+        const invalidRole = await adminAgent
+            .put(`/api/users/${target._id}`)
+            .send({
+                displayName: userDetails.displayName,
+                username: userDetails.username,
+                email: userDetails.email,
+                role: 'not-a-role'
+            });
+        expect(invalidRole.status).toBe(400);
+
+        const unchanged = await getDb().collection('users').findOne({
+            username: userDetails.username
+        });
+        expect(unchanged).toMatchObject({
+            displayName: userDetails.displayName,
+            email: userDetails.email
+        });
+    });
+
+    test('returns not found for deleting a valid but nonexistent user', async () => {
+        const adminAgent = request.agent(app);
+        await login(adminAgent, adminCredentials);
+
+        const response = await adminAgent.delete(
+            '/api/users/507f1f77bcf86cd799439011'
+        );
+
+        expect(response.status).toBe(404);
+        expect(response.body).toEqual({ error: 'User not found' });
     });
 
     test('returns pagination metadata and validates pagination queries', async () => {
